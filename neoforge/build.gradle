@@ -41,4 +41,32 @@ neoForge {
     }
 }
 
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = "${rootProject.mod_id}-neoforge"
+
+            pom {
+                name = "ArmoryAPI"
+                description = "A lightweight, cross-loader API for defining customizable tool and armor sets"
+
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://github.com/Xun39/ArmoryAPI/blob/1.21.1/LICENSE'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
+}
+
 sourceSets.main.resources { srcDir 'src/generated/resources' }

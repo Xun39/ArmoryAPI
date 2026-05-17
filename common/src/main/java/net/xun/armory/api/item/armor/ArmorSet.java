@@ -1,181 +1,142 @@
 package net.xun.armory.api.item.armor;
 
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
-import net.xun.armory.internal.util.LazyReference;
+import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
+import net.xun.armory.api.item.ItemSet;
 
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
- * Represents a complete set of armor (helmet, chestplate, leggings, boots).
+ * Represents a complete set of armor consisting of helmet, chestplate, leggings, and boots.
  * <p>
- * This class provides a convenient way to create and manage a full set of armor
- * with consistent properties across all pieces. Each armor piece is lazily
- * initialized and can be accessed individually or as a complete collection.
- * Use the nested {@link Builder} to configure armor sets with shared properties.
+ * This class provides a convenient abstraction for creating and managing a full armor set
+ * with consistent properties across all pieces. Each armor piece is lazily initialized
+ * upon first access and can be retrieved individually or as a complete collection.
  * </p>
- * <p>
- * Example usage with NeoForge:
+ *
+ * <h2>Usage Example (with NeoForge) :</h2>
+ *
  * <pre>{@code
  * // Create a basic armor set with default properties
  * Holder<ArmorMaterial> diamondMaterial = ...;
  * ArmorSet diamondArmor = new ArmorSet.Builder("diamond", diamondMaterial)
- *     .withDurabilityFactor(15)
- *     .withItemPropertiesSupplier(() -> new Item.Properties().stacksTo(1))
+ *     .withDurabilityFactor(33)  // Standard diamond multiplier
  *     .build();
  *
- * // Register the armor set
+ * // Register all armor pieces
  * Map<ResourceLocation, Supplier<ArmorItem>> items = diamondArmor.getItemsForRegistration("mymod");
  * items.forEach((id, supplier) -> ITEMS.register(id.getPath(), supplier));
  *
  * // Access individual pieces
  * Supplier<ArmorItem> helmet = diamondArmor.getHelmet();
+ * Supplier<ArmorItem> chestplate = diamondArmor.getChestplate();
  * }</pre>
  *
  * @see Builder
  * @see ArmorType
- * @see ArmorConfigurator
+ * @see ArmorCustomizer
+ * @since 1.0.0
  */
-public class ArmorSet {
-
-    private final String name;
-    private final Map<ArmorType, LazyReference<ArmorItem>> armors = new EnumMap<>(ArmorType.class);
+public class ArmorSet extends ItemSet<ArmorType, ArmorItem> {
 
     /**
-     * Constructs a new ArmorSet with the specified properties.
+     * Constructs a new ArmorSet with the specified configuration.
      *
-     * @param name               The base name for all armor pieces in the set
-     * @param material           Holder for the armor material defining protection and toughness
-     * @param durabilityFactor   Multiplier for the material's base durability
-     * @param propertiesSupplier Supplier for item properties applied to all armor pieces
-     * @param configuration      Armor creation strategy implementation
+     * @param name base name for all armor pieces in the set (e.g., "diamond")
+     * @param material holder for the armor material defining protection and toughness
+     * @param durabilityFactor multiplier for the material's base durability
+     * @param propertiesSupplier supplier for item properties applied to all pieces
+     * @param customizer strategy for creating individual armor items
+     * @throws NullPointerException if any required parameter is {@code null}
+     * @throws IllegalArgumentException if durabilityFactor is negative
      */
     protected ArmorSet(String name,
                        Holder<ArmorMaterial> material,
                        int durabilityFactor,
                        Supplier<Item.Properties> propertiesSupplier,
-                       ArmorConfigurator configuration) {
-
-        for (ArmorType type : ArmorType.values()) {
-            String fullName = name + type.getNameSuffix();
-
-            Item.Properties armorProperties = propertiesSupplier.get();
-
-            armors.put(type, new LazyReference<>(
-                    fullName,
-                    () -> configuration.createArmor(type, material, durabilityFactor, armorProperties))
-            );
-        }
-        this.name = name;
+                       ArmorCustomizer customizer
+    ) {
+        super(
+                name,
+                ArmorType.class,
+                new ArmorFactory(material, durabilityFactor, propertiesSupplier, customizer)
+        );
     }
 
     /**
-     * Retrieves all armor items in this set for registration purposes.
+     * Gets the helmet item supplier from this armor set.
      * <p>
-     * This method returns a map of ResourceLocation to Supplier pairs that can be used
-     * to register the armor pieces with the game registry. Each piece is identified by
-     * a ResourceLocation constructed from the provided modId and the armor's full name.
+     * The supplier will create the helmet item upon first invocation and cache
+     * the result for subsequent calls.
      * </p>
      *
-     * @param modId Your mod ID used to construct ResourceLocation identifiers
-     * @return Map of {@link ResourceLocation} keys to {@link Supplier} providers for armor items
-     * @throws NullPointerException if modId is null
-     */
-    public Map<ResourceLocation, Supplier<ArmorItem>> getItemsForRegistration(String modId) {
-        Map<ResourceLocation, Supplier<ArmorItem>> items = new LinkedHashMap<>();
-
-        for (Map.Entry<ArmorType, LazyReference<ArmorItem>> entry : armors.entrySet()) {
-            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(modId, entry.getValue().getName());
-            items.put(id, entry.getValue());
-        }
-
-        return items;
-    }
-
-    /**
-     * Gets the base name of this armor set.
-     * <p>
-     * This is the name without armor-specific suffixes (e.g., "diamond" for "diamond_helmet").
-     * </p>
-     *
-     * @return The base name of this armor set
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Gets the helmet item from this armor set.
-     *
-     * @return Supplier providing the registered helmet
+     * @return supplier providing the registered helmet, never {@code null}
      */
     public Supplier<ArmorItem> getHelmet() {
-        return armors.get(ArmorType.HELMET);
+        return get(ArmorType.HELMET);
     }
 
     /**
-     * Gets the chestplate item from this armor set.
+     * Gets the chestplate item supplier from this armor set.
+     * <p>
+     * The supplier will create the chestplate item upon first invocation and cache
+     * the result for subsequent calls.
+     * </p>
      *
-     * @return Supplier providing the registered chestplate
+     * @return supplier providing the registered chestplate, never {@code null}
      */
     public Supplier<ArmorItem> getChestplate() {
-        return armors.get(ArmorType.CHESTPLATE);
+        return get(ArmorType.CHESTPLATE);
     }
 
     /**
-     * Gets the leggings item from this armor set.
+     * Gets the leggings item supplier from this armor set.
+     * <p>
+     * The supplier will create the leggings item upon first invocation and cache
+     * the result for subsequent calls.
+     * </p>
      *
-     * @return Supplier providing the registered leggings
+     * @return supplier providing the registered leggings, never {@code null}
      */
     public Supplier<ArmorItem> getLeggings() {
-        return armors.get(ArmorType.LEGGINGS);
+        return get(ArmorType.LEGGINGS);
     }
 
     /**
-     * Gets the boots item from this armor set.
+     * Gets the boots item supplier from this armor set.
+     * <p>
+     * The supplier will create the boots item upon first invocation and cache
+     * the result for subsequent calls.
+     * </p>
      *
-     * @return Supplier providing the registered boots
+     * @return supplier providing the registered boots, never {@code null}
      */
     public Supplier<ArmorItem> getBoots() {
-        return armors.get(ArmorType.BOOTS);
+        return get(ArmorType.BOOTS);
     }
 
     /**
-     * Retrieves all registered armor items in this set.
+     * Builder for constructing {@link ArmorSet} instances with a fluent API.
      * <p>
-     * This method returns a list containing all four armor pieces (helmet, chestplate,
-     * leggings, boots) in the order defined by {@link ArmorType#values()}. All items
-     * are initialized when this method is called.
+     * This builder enables configuration of shared properties across all armor pieces
+     * in a set, including durability multipliers, item properties, and custom creation logic.
      * </p>
+     * <strong>Default Values:</strong>
+     * <ul>
+     *   <li>Durability factor: 0 (uses material default)</li>
+     *   <li>Properties supplier: {@code Item.Properties::new}</li>
+     *   <li>Customizer: {@link DefaultArmorCustomizer#INSTANCE}</li>
+     * </ul>
      *
-     * @return List containing all armor items in this set
-     */
-    public List<Item> getAll() {
-        return armors.values().stream()
-                .map(Supplier::get)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Builder for constructing {@link ArmorSet} instances.
-     * <p>
-     * Provides a fluent API for configuring armor sets with shared properties.
-     * The builder allows setting durability multipliers, item properties, and
-     * custom armor creation logic.
-     * </p>
-     * <p>
-     * Example usage with custom properties:
+     * <h2>Example Usage:</h2>
+     *
      * <pre>{@code
+     * // Create netherite armor with fire resistance
      * ArmorSet netheriteArmor = new ArmorSet.Builder("netherite", NETHERITE_MATERIAL)
-     *     .withDurabilityFactor(15) // Same as diamond
+     *     .withDurabilityFactor(37)  // Standard netherite multiplier
      *     .withItemPropertiesSupplier(() -> new Item.Properties()
      *         .fireResistant()
      *         .rarity(Rarity.EPIC))
@@ -183,24 +144,23 @@ public class ArmorSet {
      * }</pre>
      *
      * @see ArmorSet
-     * @see ArmorConfigurator
+     * @see ArmorCustomizer
+     * @since 1.0.0
      */
     public static class Builder {
         private final String name;
         private final Holder<ArmorMaterial> material;
         private int durabilityFactor;
         private Supplier<Item.Properties> propertiesSupplier = Item.Properties::new;
-        private ArmorConfigurator configuration = ArmorConfigurator.DEFAULT;
+        private ArmorCustomizer customizer = DefaultArmorCustomizer.INSTANCE;
 
         /**
-         * Constructs a new builder for an armor set.
-         * <p>
-         * Initializes with default durability factor (from material) and empty properties.
-         * </p>
+         * Constructs a new builder for an armor set with the specified base name and material.
          *
-         * @param name Base name for armor pieces (appended with armor-specific suffixes)
-         * @param material Armor material holder defining protection and toughness
-         * @throws NullPointerException if name or material is null
+         * @param name base name for armor pieces (e.g., "iron"), will be appended with armor-specific suffixes
+         * @param material armor material holder defining protection values and toughness
+         * @throws NullPointerException if {@code name} or {@code material} is {@code null}
+         * @throws IllegalArgumentException if {@code name} is empty or contains invalid characters
          */
         public Builder(String name, Holder<ArmorMaterial> material) {
             this.name = name;
@@ -208,25 +168,35 @@ public class ArmorSet {
         }
 
         /**
-         * Sets durability multiplier for all armor pieces.
+         * Sets the durability multiplier for all armor pieces in the set.
          * <p>
-         * Final durability for each piece is calculated as:
-         * <code>material base durability * durabilityFactor</code>
+         * The final durability for each piece is calculated as:
+         * <code>armor type base durability × durabilityFactor</code>
          * </p>
-         * <p>
-         * Vanilla values for reference:
-         * <ul>
-         *   <li>Leather: 5 (multiplier applied to 55 base)</li>
-         *   <li>Chain: 15 (multiplier applied to 165 base)</li>
-         *   <li>Iron: 15 (multiplier applied to 165 base)</li>
-         *   <li>Gold: 7 (multiplier applied to 77 base)</li>
-         *   <li>Diamond: 33 (multiplier applied to 363 base)</li>
-         *   <li>Netherite: 37 (multiplier applied to 407 base)</li>
-         * </ul>
+         * <strong>Vanilla Reference Values:</strong>
+         * <table border="1">
+         *   <caption>Vanilla Durability Factors</caption>
+         *   <tr><th>Material</th><th>Durability Factor</th></tr>
+         *   <tr><td>Leather</td><td>5</td></tr>
+         *   <tr><td>Chain</td><td>15</td></tr>
+         *   <tr><td>Iron</td><td>15</td></tr>
+         *   <tr><td>Gold</td><td>7</td></tr>
+         *   <tr><td>Diamond</td><td>33</td></tr>
+         *   <tr><td>Netherite</td><td>37</td></tr>
+         * </table>
          *
-         * @param durabilityFactor Multiplier for base material durability
-         * @return This builder for chaining
-         * @throws IllegalArgumentException if durabilityFactor is negative
+         * <table border="1">
+         *   <caption>Vanilla Armor Type Base Durability</caption>
+         *   <tr><th>Armor type</th><th>Base Durability</th></tr>
+         *   <tr><td>Helmet</td><td>11</td></tr>
+         *   <tr><td>Chestplate</td><td>16</td></tr>
+         *   <tr><td>Leggings</td><td>15</td></tr>
+         *   <tr><td>Boots</td><td>13</td></tr>
+         * </table>
+         *
+         * @param durabilityFactor multiplier for base armor type durability
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code durabilityFactor} is negative
          */
         public Builder withDurabilityFactor(int durabilityFactor) {
             this.durabilityFactor = durabilityFactor;
@@ -234,15 +204,17 @@ public class ArmorSet {
         }
 
         /**
-         * <b>Caution:</b> Sets shared item properties for all armor pieces.
+         * <strong>Warning:</strong> Sets shared item properties for all armor pieces.
          * <p>
-         * May cause attribute conflicts if properties are mutated internally.
-         * Prefer {@link #withItemPropertiesSupplier}.
+         * This method reuses the same {@link Item.Properties} instance for all armor pieces,
+         * which may cause issues if properties are mutated internally. For most cases,
+         * prefer {@link #withItemPropertiesSupplier(Supplier)} which creates fresh
+         * properties for each piece.
          * </p>
          *
-         * @param properties Base properties for all armor
-         * @return This builder for chaining
-         * @throws NullPointerException if properties is null
+         * @param properties base properties applied to all armor pieces
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code properties} is {@code null}
          * @see #withItemPropertiesSupplier(Supplier)
          */
         public Builder withItemProperties(Item.Properties properties) {
@@ -251,15 +223,16 @@ public class ArmorSet {
         }
 
         /**
-         * Sets item properties using a supplier (called per-piece during construction).
+         * Sets a supplier for item properties, called once per armor piece during creation.
          * <p>
-         * This method is safer than {@link #withItemProperties} for armor sets,
-         * as it ensures each armor piece gets a fresh instance of properties if needed.
+         * This is the preferred method for setting properties as it ensures each armor
+         * piece receives a fresh {@link Item.Properties} instance, avoiding potential
+         * mutation conflicts.
          * </p>
          *
-         * @param propertiesSupplier Supplier providing base properties for each armor piece
-         * @return This builder for chaining
-         * @throws NullPointerException if propertiesSupplier is null
+         * @param propertiesSupplier supplier providing base properties for each armor piece
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code propertiesSupplier} is {@code null}
          * @see #withItemProperties(Item.Properties)
          */
         public Builder withItemPropertiesSupplier(Supplier<Item.Properties> propertiesSupplier) {
@@ -268,19 +241,20 @@ public class ArmorSet {
         }
 
         /**
-         * Sets custom armor creation logic.
+         * Sets a custom armor creation strategy for specialized armor types.
          * <p>
-         * Allows overriding the default armor creation behavior for specialized
-         * armor types or custom armor implementations.
+         * This allows overriding the default armor creation behavior to implement
+         * custom armor classes, modified durability calculations, or additional
+         * properties.
          * </p>
          *
-         * @param configuration Armor creation strategy implementation
-         * @return This builder for chaining
-         * @throws NullPointerException if configuration is null
-         * @see ArmorConfigurator
+         * @param customizer armor creation strategy implementation
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code customizer} is {@code null}
+         * @see ArmorCustomizer
          */
-        public Builder withConfiguration(ArmorConfigurator configuration) {
-            this.configuration = configuration;
+        public Builder withCustomizer(ArmorCustomizer customizer) {
+            this.customizer = customizer;
             return this;
         }
 
@@ -295,7 +269,7 @@ public class ArmorSet {
          * @throws IllegalStateException if required configuration is invalid
          */
         public ArmorSet build() {
-            return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesSupplier, this.configuration);
+            return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesSupplier, this.customizer);
         }
     }
 }

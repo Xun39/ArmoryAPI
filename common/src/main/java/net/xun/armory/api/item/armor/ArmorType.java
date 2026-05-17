@@ -2,23 +2,35 @@ package net.xun.armory.api.item.armor;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
+import net.xun.armory.internal.item.PieceType;
 
 /**
- * Enumerates armor piece types with their registration suffixes and equipment slots.
+ * Enumerates the four standard armor piece types in Minecraft with their associated metadata.
  * <p>
- * This enum defines the four standard Minecraft armor types, each with a specific
- * registration suffix, Minecraft armor type, and equipment slot.
+ * This enum defines the complete set of wearable armor pieces, each with:
  * </p>
- * <p>
- * Example naming: base name "diamond" becomes:
  * <ul>
- *   <li>HELMET: "diamond_helmet"</li>
- *   <li>CHESTPLATE: "diamond_chestplate"</li>
- *   <li>LEGGINGS: "diamond_leggings"</li>
- *   <li>BOOTS: "diamond_boots"</li>
+ *   <li>A registration suffix for automatic naming</li>
+ *   <li>An {@link ArmorItem.Type} for protection and durability calculations</li>
+ *   <li>An {@link EquipmentSlot} for player equipment management</li>
  * </ul>
+ * The naming convention follows Minecraft's standard: {@code base_name + suffix}.
+ * <p></p>
+ * <strong>Example Naming:</strong> For base name "diamond":
+ * <table border="1">
+ *   <caption>Armor Piece Naming</caption>
+ *   <tr><th>ArmorType</th><th>Full Name</th></tr>
+ *   <tr><td>HELMET</td><td>diamond_helmet</td></tr>
+ *   <tr><td>CHESTPLATE</td><td>diamond_chestplate</td></tr>
+ *   <tr><td>LEGGINGS</td><td>diamond_leggings</td></tr>
+ *   <tr><td>BOOTS</td><td>diamond_boots</td></tr>
+ * </table>
+ *
+ * @see ArmorSet
+ * @see ArmorItem.Type
+ * @since 1.0.0
  */
-public enum ArmorType {
+public enum ArmorType implements PieceType {
 
     /** Head protection armor piece */
     HELMET("_helmet", ArmorItem.Type.HELMET, EquipmentSlot.HEAD),
@@ -34,11 +46,11 @@ public enum ArmorType {
     private final EquipmentSlot slot;
 
     /**
-     * Constructs a new ArmorType with the specified properties.
+     * Constructs a new ArmorType with the specified metadata.
      *
-     * @param suffix The suffix to append to base names for registry IDs
-     * @param type The Minecraft armor type used for protection calculations
-     * @param slot The equipment slot this armor piece occupies
+     * @param suffix the suffix appended to base names for registry IDs
+     * @param type the Minecraft armor type used for protection calculations
+     * @param slot the equipment slot this armor piece occupies
      */
     ArmorType(String suffix, ArmorItem.Type type, EquipmentSlot slot) {
         this.nameSuffix = suffix;
@@ -49,37 +61,36 @@ public enum ArmorType {
     /**
      * Gets the registration suffix for this armor type.
      * <p>
-     * The suffix is appended to the base name to form the full registry ID.
+     * This suffix is concatenated with the base name to form the complete
+     * registry ID for the armor piece.
      * </p>
      *
-     * @return The registration suffix for this armor type
+     * @return the registration suffix, never {@code null}
      */
+    @Override
     public String getNameSuffix() {
         return nameSuffix;
     }
 
     /**
-     * Gets the Minecraft armor type for protection calculations.
-     * <p>
-     * This type determines the base protection value and durability multiplier
-     * for the armor piece.
-     * </p>
+     * Gets the Minecraft armor type for protection and durability calculations.
      *
-     * @return The Minecraft armor type
+     * @return the Minecraft armor type, never {@code null}
      */
-    public ArmorItem.Type getType() {
+    public ArmorItem.Type getArmorType() {
         return type;
     }
 
     /**
-     * Gets the equipment slot this armor piece occupies.
+     * Gets the equipment slot where this armor piece is worn.
      * <p>
-     * This determines where the armor piece is equipped on the player.
+     * This determines the player inventory slot and equipment rendering
+     * position for the armor piece.
      * </p>
      *
-     * @return The equipment slot for this armor type
+     * @return the equipment slot for this armor type, never {@code null}
      */
-    public EquipmentSlot getSlot() {
+    public EquipmentSlot getEquipmentSlot() {
         return slot;
     }
 }

@@ -39,3 +39,31 @@ artifacts {
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
 }
 
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.mod_id + "-" + project.name
+
+            pom {
+                name = "ArmoryAPI"
+                description = "A lightweight, cross-loader API for defining customizable tool and armor sets"
+                url = 'https://github.com/Xun39/ArmoryAPI'
+
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://github.com/Xun39/ArmoryAPI/blob/1.21.1/LICENSE'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
+}
