@@ -1,90 +1,94 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.*;
+import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
+import net.xun.armory.impl.item.PieceType;
 
 /**
- * Enumerates tool types with their registration suffixes and factory methods.
+ * Enumerates the five standard tool types in Minecraft with associated metadata.
  * <p>
- * This enum defines the five standard Minecraft tool types, each with a specific
- * registration suffix and factory method for creating tool instances.
- * The order of values is [SWORD, AXE, PICKAXE, HOE, SHOVEL].
  * </p>
+ * This enum defines the complete set of craftable tools, each with:
+ * <ul>
+ *   <li>A registration suffix for automatic naming</li>
+ *   <li>The corresponding vanilla Minecraft tool class</li>
+ * </ul>
+ * The naming convention follows Minecraft's standard: {@code base_name + suffix}.
+ * <p>
+ * <strong>Important:</strong> The iteration order of values is fixed as:
+ * [SWORD, AXE, PICKAXE, HOE, SHOVEL]. This order must be respected when using
+ * array-based configuration methods like
+ * {@link ToolSet.Builder#withToolStats(float[], float[])}.
+ * </p>
+ * <p>
+ * </p>
+ * <strong>Example Naming:</strong> For base name "iron":
+ * <table border="1">
+ *   <caption>Tool Piece Naming</caption>
+ *   <tr><th>ToolType</th><th>Full Name</th><th>Vanilla Class</th></tr>
+ *   <tr><td>SWORD</td><td>iron_sword</td><td>{@link SwordItem}</td></tr>
+ *   <tr><td>AXE</td><td>iron_axe</td><td>{@link AxeItem}</td></tr>
+ *   <tr><td>PICKAXE</td><td>iron_pickaxe</td><td>{@link PickaxeItem}</td></tr>
+ *   <tr><td>HOE</td><td>iron_hoe</td><td>{@link HoeItem}</td></tr>
+ *   <tr><td>SHOVEL</td><td>iron_shovel</td><td>{@link ShovelItem}</td></tr>
+ * </table>
  *
- * @see #create(Tier, Item.Properties)
- * @see ToolFactory
+ * @see ToolSet
+ * @see DefaultToolCustomizer
+ * @since 1.0.0
  */
-public enum ToolType {
+public enum ToolType implements PieceType {
 
     /** Sword tool type */
-    SWORD("_sword", SwordItem::new),
+    SWORD("_sword", SwordItem.class),
     /** Axe tool type */
-    AXE("_axe", AxeItem::new),
+    AXE("_axe", AxeItem.class),
     /** Pickaxe tool type */
-    PICKAXE("_pickaxe", PickaxeItem::new),
+    PICKAXE("_pickaxe", PickaxeItem.class),
     /** Hoe tool type */
-    HOE("_hoe", HoeItem::new),
+    HOE("_hoe", HoeItem.class),
     /** Shovel tool type */
-    SHOVEL("_shovel", ShovelItem::new);
+    SHOVEL("_shovel", ShovelItem.class);
 
     /** Suffix appended to base name for registration */
     private final String nameSuffix;
-    private final ToolFactory factory;
+    private final Class<? extends Item> vanillaClass;
 
     /**
-     * Constructs a new ToolType with the specified registration suffix and factory.
+     * Constructs a new ToolType with the specified metadata.
      *
-     * @param registrationSuffix The suffix to append to base names for registry IDs
-     * @param factory The factory method for creating tool instances of this type
+     * @param registrationSuffix the suffix appended to base names for registry IDs
+     * @param vanillaClass the vanilla Minecraft tool class for this tool type
      */
-    ToolType(String registrationSuffix, ToolFactory factory) {
+    ToolType(String registrationSuffix, Class<? extends Item> vanillaClass) {
         this.nameSuffix = registrationSuffix;
-        this.factory = factory;
-    }
-
-    /**
-     * Creates a tool item instance of this type.
-     * <p>
-     * Delegates to the factory method associated with this tool type.
-     * </p>
-     *
-     * @param tier Material tier for tool durability and mining level
-     * @param properties Base item properties (durability, enchantability, etc.)
-     * @return Configured tool item instance
-     * @throws NullPointerException if tier or properties is null
-     */
-    public Item create(Tier tier, Item.Properties properties) {
-        return factory.create(tier, properties);
+        this.vanillaClass = vanillaClass;
     }
 
     /**
      * Gets the registration suffix for this tool type.
      * <p>
-     * The suffix is appended to the base name to form the full registry ID.
-     * For example, a base name "diamond" with suffix "_sword" becomes "diamond_sword".
+     * This suffix is concatenated with the base name to form the complete
+     * registry ID for the tool.
      * </p>
      *
-     * @return The registration suffix for this tool type
+     * @return the registration suffix, never {@code null}
      */
+    @Override
     public String getNameSuffix() {
         return nameSuffix;
     }
 
     /**
-     * Functional interface for tool item construction.
+     * Gets the vanilla Minecraft tool class for this tool type.
      * <p>
-     * Each implementation creates a specific type of tool item with the given
-     * tier and properties.
+     * This class is used by {@link DefaultToolCustomizer} to create standard
+     * tool instances and can be used for type checking or reflection.
      * </p>
+     *
+     * @return the vanilla tool class for this type, never {@code null}
      */
-    @FunctionalInterface
-    interface ToolFactory {
-        /**
-         * Creates a tool item instance.
-         *
-         * @param tier Material tier for tool durability and mining level
-         * @param props Item properties (durability, enchantability, etc.)
-         * @return New tool item instance
-         */
-        Item create(Tier tier, Item.Properties props);
+    public Class<? extends Item> getVanillaClass() {
+        return vanillaClass;
     }
 }

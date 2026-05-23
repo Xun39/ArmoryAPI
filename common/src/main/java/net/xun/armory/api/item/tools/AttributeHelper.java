@@ -1,6 +1,7 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
+import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 /**
  * Defines a strategy for applying attribute modifiers to tool items.
