@@ -1,4 +1,4 @@
-package net.xun.armory.internal.item;
+package net.xun.armory.impl.item;
 
 import net.xun.armory.api.item.ItemSet;
 import org.jetbrains.annotations.ApiStatus;

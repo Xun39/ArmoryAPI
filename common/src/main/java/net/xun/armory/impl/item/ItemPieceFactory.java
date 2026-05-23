@@ -1,4 +1,4 @@
-package net.xun.armory.internal.item;
+package net.xun.armory.impl.item;
 
 import net.minecraft.world.item.Item;
 import net.xun.armory.api.item.ItemSet;

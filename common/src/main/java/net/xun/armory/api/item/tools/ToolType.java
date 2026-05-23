@@ -2,7 +2,7 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.*;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
-import net.xun.armory.internal.item.PieceType;
+import net.xun.armory.impl.item.PieceType;
 
 /**
  * Enumerates the five standard tool types in Minecraft with associated metadata.

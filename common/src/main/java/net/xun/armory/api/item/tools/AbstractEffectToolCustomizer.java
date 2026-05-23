@@ -1,9 +1,7 @@
-package net.xun.armory.impl.item.tools;
+package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
-import net.xun.armory.api.item.tools.ToolCustomizer;
-import net.xun.armory.api.item.tools.ToolType;
 
 /**
  * Abstract base class for tool customizers that apply hit effects depending on the tool type.
@@ -19,6 +17,7 @@ import net.xun.armory.api.item.tools.ToolType;
  *
  * @see ToolCustomizer
  * @see ToolType
+ * @since 2.1.0
  */
 public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
 

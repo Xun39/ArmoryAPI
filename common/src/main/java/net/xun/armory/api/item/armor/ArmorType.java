@@ -2,7 +2,7 @@ package net.xun.armory.api.item.armor;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ArmorItem;
-import net.xun.armory.internal.item.PieceType;
+import net.xun.armory.impl.item.PieceType;
 
 /**
  * Enumerates the four standard armor piece types in Minecraft with their associated metadata.

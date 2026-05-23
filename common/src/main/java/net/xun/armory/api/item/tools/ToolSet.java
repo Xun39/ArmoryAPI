@@ -3,6 +3,7 @@ package net.xun.armory.api.item.tools;
 import net.minecraft.world.item.*;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 import net.xun.armory.api.item.ItemSet;
+import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -20,7 +21,7 @@ import java.util.function.Supplier;
  *
  * <pre>{@code
  * // Create a diamond tool set with vanilla balance
- * ToolSet diamondTools = new ToolSet.Builder("diamond", Tiers.DIAMOND, new GenericAttributeHelper())
+ * ToolSet diamondTools = new ToolSet.Builder("diamond", Tiers.DIAMOND)
  *     .withVanillaBalance()
  *     .build();
  *
@@ -193,7 +194,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
         private final EnumMap<ToolType, Float> attackSpeed = new EnumMap<>(ToolType.class);
         private Supplier<Item.Properties> propertiesSupplier = Item.Properties::new;
         private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
-        private final AttributeHelper attributeHelper;
+        private AttributeHelper attributeHelper = new GenericAttributeHelper();
 
         /**
          * Constructs a new builder for a tool set with the specified base name and tier.
@@ -202,16 +203,14 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          *             tool-specific suffixes
          * @param tier material tier for all tools, defines base durability,
          *             mining level, and base damage
-         * @param attributeHelper helper for applying combat attributes to tools
          * @throws NullPointerException if {@code name}, {@code tier}, or
          *         {@code attributeHelper} is {@code null}
          * @throws IllegalArgumentException if {@code name} is empty or contains
          *         invalid characters
          */
-        public Builder(String name, Tier tier, AttributeHelper attributeHelper) {
+        public Builder(String name, Tier tier) {
             this.name = name;
             this.tier = tier;
-            this.attributeHelper = attributeHelper;
             initializeDefaultStats();
         }
 
@@ -353,6 +352,11 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          */
         public Builder withCustomizer(ToolCustomizer customizer) {
             this.customizer = customizer;
+            return this;
+        }
+
+        public Builder withAttributeHelper(AttributeHelper attributeHelper) {
+            this.attributeHelper = attributeHelper;
             return this;
         }
 

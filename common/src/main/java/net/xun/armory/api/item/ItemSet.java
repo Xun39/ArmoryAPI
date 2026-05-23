@@ -2,9 +2,9 @@ package net.xun.armory.api.item;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.xun.armory.internal.item.ItemPieceFactory;
-import net.xun.armory.internal.item.PieceType;
-import net.xun.armory.internal.util.LazyReference;
+import net.xun.armory.impl.item.ItemPieceFactory;
+import net.xun.armory.impl.item.PieceType;
+import net.xun.armory.impl.util.LazyReference;
 
 import java.util.Collection;
 import java.util.EnumMap;

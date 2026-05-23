@@ -2,8 +2,8 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tier;
-import net.xun.armory.internal.item.ItemPieceFactory;
-import net.xun.armory.internal.item.PieceType;
+import net.xun.armory.impl.item.ItemPieceFactory;
+import net.xun.armory.impl.item.PieceType;
 
 import java.util.EnumMap;
 import java.util.function.Supplier;

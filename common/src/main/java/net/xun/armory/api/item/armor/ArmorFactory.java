@@ -4,8 +4,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
-import net.xun.armory.internal.item.PieceType;
-import net.xun.armory.internal.item.ItemPieceFactory;
+import net.xun.armory.impl.item.PieceType;
+import net.xun.armory.impl.item.ItemPieceFactory;
 
 import java.util.function.Supplier;
 

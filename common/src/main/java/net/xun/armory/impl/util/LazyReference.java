@@ -1,4 +1,4 @@
-package net.xun.armory.internal.util;
+package net.xun.armory.impl.util;
 
 import org.jetbrains.annotations.ApiStatus;
 

@@ -1,6 +1,6 @@
 package net.xun.armory.fabric.mixin;
 
-import net.xun.armory.ArmoryConstants;
+import net.xun.armory.impl.ArmoryConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;

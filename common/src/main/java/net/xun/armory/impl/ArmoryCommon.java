@@ -1,4 +1,4 @@
-package net.xun.armory;
+package net.xun.armory.impl;
 
 import net.xun.armory.platform.Services;
 

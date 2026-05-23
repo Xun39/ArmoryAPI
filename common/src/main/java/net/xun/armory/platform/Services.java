@@ -1,6 +1,6 @@
 package net.xun.armory.platform;
 
-import net.xun.armory.ArmoryConstants;
+import net.xun.armory.impl.ArmoryConstants;
 import net.xun.armory.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
