@@ -2,7 +2,10 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
+
+import java.util.function.Consumer;
 
 /**
  * Factory interface for creating custom tool items with specialized initialization.
@@ -47,7 +50,6 @@ public interface ToolCustomizer {
      * <strong>Implementation Notes:</strong>
      * <ul>
      *   <li>Properties already include any attribute modifications from
-     *       {@link AttributeHelper}</li>
      *   <li>The tool material provides durability, mining level, and base damage</li>
      *   <li>Custom implementations may return subclasses of standard tools</li>
      * </ul>
@@ -61,5 +63,5 @@ public interface ToolCustomizer {
      * @throws IllegalArgumentException if the tool material is incompatible with the
      *         tool type or properties are invalid
      */
-    Item create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed);
+    ToolItem create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes);
 }

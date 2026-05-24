@@ -40,29 +40,26 @@ import net.xun.armory.impl.item.PieceType;
 public enum ToolType implements PieceType {
 
     /** Sword tool type */
-    SWORD("_sword", SwordItem.class),
+    SWORD("_sword"),
     /** Axe tool type */
-    AXE("_axe", AxeItem.class),
+    AXE("_axe"),
     /** Pickaxe tool type */
-    PICKAXE("_pickaxe", PickaxeItem.class),
+    PICKAXE("_pickaxe"),
     /** Hoe tool type */
-    HOE("_hoe", HoeItem.class),
+    HOE("_hoe"),
     /** Shovel tool type */
-    SHOVEL("_shovel", ShovelItem.class);
+    SHOVEL("_shovel");
 
     /** Suffix appended to base name for registration */
     private final String nameSuffix;
-    private final Class<? extends Item> vanillaClass;
 
     /**
      * Constructs a new ToolType with the specified metadata.
      *
      * @param registrationSuffix the suffix appended to base names for registry IDs
-     * @param vanillaClass the vanilla Minecraft tool class for this tool type
      */
-    ToolType(String registrationSuffix, Class<? extends Item> vanillaClass) {
+    ToolType(String registrationSuffix) {
         this.nameSuffix = registrationSuffix;
-        this.vanillaClass = vanillaClass;
     }
 
     /**
@@ -77,18 +74,5 @@ public enum ToolType implements PieceType {
     @Override
     public String getNameSuffix() {
         return nameSuffix;
-    }
-
-    /**
-     * Gets the vanilla Minecraft tool class for this tool type.
-     * <p>
-     * This class is used by {@link DefaultToolCustomizer} to create standard
-     * tool instances and can be used for type checking or reflection.
-     * </p>
-     *
-     * @return the vanilla tool class for this type, never {@code null}
-     */
-    public Class<? extends Item> getVanillaClass() {
-        return vanillaClass;
     }
 }

@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  *
  * @param <T> the type of object to be lazily initialized
  *
- *
+ * @since 1.0.0
  */
 @ApiStatus.Internal
 public class LazyReference<T> implements Supplier<T> {

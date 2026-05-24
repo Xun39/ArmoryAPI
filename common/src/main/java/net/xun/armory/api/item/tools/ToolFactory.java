@@ -2,12 +2,13 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.ItemPieceFactory;
 import net.xun.armory.impl.item.PieceType;
-import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 import java.util.EnumMap;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -25,17 +26,16 @@ import java.util.function.UnaryOperator;
  *
  * @see ToolSet
  * @see ToolCustomizer
- * @see AttributeHelper
  * @since 1.0.0
  */
-public final class ToolFactory implements ItemPieceFactory<ToolType, Item> {
+public final class ToolFactory implements ItemPieceFactory<ToolType, ToolItem> {
 
     private final ToolMaterial toolMaterial;
     private final EnumMap<ToolType, Float> attackDamage;
     private final EnumMap<ToolType, Float> attackSpeed;
     private final UnaryOperator<Item.Properties> propertiesModifier;
     private final ToolCustomizer customizer;
-    private final AttributeHelper attributeHelper;
+    private final Consumer<ItemAttributeModifiers.Builder> additionalAttributes;
 
     public ToolFactory(
             ToolMaterial toolMaterial,
@@ -43,14 +43,14 @@ public final class ToolFactory implements ItemPieceFactory<ToolType, Item> {
             EnumMap<ToolType, Float> attackSpeed,
             UnaryOperator<Item.Properties> propertiesModifier,
             ToolCustomizer customizer,
-            AttributeHelper attributeHelper
+            Consumer<ItemAttributeModifiers.Builder> additionalAttributes
     ) {
         this.toolMaterial = Objects.requireNonNull(toolMaterial, "toolMaterial");
         this.attackDamage = Objects.requireNonNull(attackDamage, "attackDamage");
         this.attackSpeed = Objects.requireNonNull(attackSpeed, "attackSpeed");
         this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
         this.customizer = Objects.requireNonNull(customizer, "customizer");
-        this.attributeHelper = Objects.requireNonNullElse(attributeHelper, new GenericAttributeHelper());
+        this.additionalAttributes = Objects.requireNonNullElse(additionalAttributes, builder -> {});
     }
 
     /**
@@ -65,22 +65,19 @@ public final class ToolFactory implements ItemPieceFactory<ToolType, Item> {
     }
 
     @Override
-    public Item create(ToolType piece, Item.Properties properties) {
+    public ToolItem create(ToolType piece, Item.Properties properties) {
         Item.Properties effective = propertiesModifier.apply(properties);
-        effective = attributeHelper.apply(
-                effective,
-                piece,
-                toolMaterial,
-                attackDamage.getOrDefault(piece, 0.0F),
-                attackSpeed.getOrDefault(piece, 0.0F)
-        );
+
+        float damage = attackDamage.getOrDefault(piece, 0.0F);
+        float speed = attackSpeed.getOrDefault(piece, 0.0F);
 
         return customizer.create(
                 piece,
                 toolMaterial,
                 effective,
-                attackDamage.getOrDefault(piece, 0.0F),
-                attackSpeed.getOrDefault(piece, 0.0F)
+                damage,
+                speed,
+                additionalAttributes
         );
     }
 }

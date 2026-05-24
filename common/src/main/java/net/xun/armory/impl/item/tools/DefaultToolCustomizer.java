@@ -1,9 +1,13 @@
 package net.xun.armory.impl.item.tools;
 
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.api.item.tools.ToolCustomizer;
+import net.xun.armory.api.item.tools.ToolItem;
 import net.xun.armory.api.item.tools.ToolType;
 import net.xun.armory.api.item.tools.ToolSet;
+
+import java.util.function.Consumer;
 
 /**
  * Provides the default tool customization implementation using standard
@@ -38,13 +42,14 @@ public enum DefaultToolCustomizer implements ToolCustomizer {
     INSTANCE;
 
     @Override
-    public Item create(ToolType type, ToolMaterial material, Item.Properties properties, float attackDamage, float attackSpeed) {
-        return switch (type) {
-            case SWORD -> new SwordItem(material, attackDamage, attackSpeed, properties);
-            case AXE -> new AxeItem(material, attackDamage, attackSpeed, properties);
-            case PICKAXE -> new PickaxeItem(material, attackDamage, attackSpeed, properties);
-            case HOE -> new HoeItem(material, attackDamage, attackSpeed, properties);
-            case SHOVEL -> new ShovelItem(material, attackDamage, attackSpeed, properties);
-        };
+    public ToolItem create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+        return new ToolItem(
+                type,
+                toolMaterial,
+                properties,
+                attackDamage,
+                attackSpeed,
+                additionalAttributes
+        );
     }
 }

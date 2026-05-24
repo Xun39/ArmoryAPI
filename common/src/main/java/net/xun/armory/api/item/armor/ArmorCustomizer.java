@@ -66,11 +66,11 @@ public interface ArmorCustomizer {
      * @param type the type of armor piece to create (helmet, chestplate, leggings, or boots)
      * @param material holder for the armor material defining protection values and toughness
      * @param durabilityFactor multiplier applied to the base material durability
-     * @param props base item properties (durability should be set by the implementation)
+     * @param properties base item properties (durability should be set by the implementation)
      * @return a fully configured armor item instance, never {@code null}
      * @throws NullPointerException if {@code type}, {@code material}, or {@code props} is {@code null}
      * @throws IllegalArgumentException if the durability factor is negative or invalid
      * @see net.minecraft.world.item.equipment.ArmorType#getDurability(int)
      */
-    ArmorItem create(ArmoryArmorType type, ArmorMaterial material, Item.Properties props, int durabilityFactor);
+    ArmorItem create(ArmoryArmorType type, ArmorMaterial material, Item.Properties properties, int durabilityFactor);
 }

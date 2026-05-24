@@ -1,11 +1,12 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 import net.xun.armory.api.item.ItemSet;
-import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -38,10 +39,9 @@ import java.util.function.UnaryOperator;
  * @see Builder
  * @see ToolType
  * @see ToolCustomizer
- * @see AttributeHelper
  * @since 1.0.0
  */
-public class ToolSet extends ItemSet<ToolType, Item> {
+public class ToolSet extends ItemSet<ToolType, ToolItem> {
 
     /**
      * Constructs a new ToolSet with the specified configuration.
@@ -56,7 +56,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
      *                           never {@code null}
      * @param customizer strategy for creating individual tool items,
      *                   never {@code null}
-     * @param attributeHelper helper for applying combat attributes,
+     * @param additionalAttributes helper for applying combat attributes,
      *                        never {@code null}
      * @throws NullPointerException if any required parameter is {@code null}
      * @throws IllegalArgumentException if attack maps are incomplete or invalid
@@ -68,13 +68,13 @@ public class ToolSet extends ItemSet<ToolType, Item> {
             EnumMap<ToolType, Float> attackSpeed,
             UnaryOperator<Item.Properties> propertiesModifier,
             ToolCustomizer customizer,
-            AttributeHelper attributeHelper
+            Consumer<ItemAttributeModifiers.Builder> additionalAttributes
     ) {
 
         super(
                 name,
                 ToolType.class,
-                new ToolFactory(toolMaterial, attackDamage, attackSpeed, propertiesModifier, customizer, attributeHelper)
+                new ToolFactory(toolMaterial, attackDamage, attackSpeed, propertiesModifier, customizer, additionalAttributes)
         );
     }
 
@@ -186,7 +186,6 @@ public class ToolSet extends ItemSet<ToolType, Item> {
      *
      * @see ToolSet
      * @see ToolCustomizer
-     * @see AttributeHelper
      * @since 1.0.0
      */
     public static class Builder {
@@ -196,7 +195,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
         private final EnumMap<ToolType, Float> attackSpeed = new EnumMap<>(ToolType.class);
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
-        private AttributeHelper attributeHelper = new GenericAttributeHelper();
+        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
 
         /**
          * Constructs a new builder for a tool set with the specified base name and tier.
@@ -299,7 +298,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
         public Builder withVanillaBalance() {
             return withToolStats(
                     new float[] { 3, 6, 1, -2.0F, 1.5F },
-                    new float[] { 1.6F, 0.9F, 1.2F, 3.0F, 1.0F }
+                    new float[] { 1.6F - 4, 0.9F - 4, 1.2F - 4, 3.0F - 4, 1.0F - 4 }
             );
         }
 
@@ -325,21 +324,8 @@ public class ToolSet extends ItemSet<ToolType, Item> {
             return this;
         }
 
-        /**
-         * Sets the attribute helper for this builder.
-         * <p>
-         * The attribute helper defines how custom attributes are applied during
-         * tool creation. This allows overriding the default attribute handling
-         * behavior to implement custom logic or additional properties.
-         * </p>
-         *
-         * @param attributeHelper the attribute helper implementation
-         * @return this builder for method chaining
-         * @throws NullPointerException if {@code attributeHelper} is {@code null}
-         * @see AttributeHelper
-         */
-        public Builder withAttributeHelper(AttributeHelper attributeHelper) {
-            this.attributeHelper = Objects.requireNonNull(attributeHelper, "attributeHelper");
+        public Builder withAdditionalAttributes(Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+            this.additionalAttributes = Objects.requireNonNull(additionalAttributes, "additionalAttributes");
             return this;
         }
 
@@ -354,7 +340,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          * @throws IllegalStateException if required configuration is missing or invalid
          */
         public ToolSet build() {
-            return new ToolSet(this.name, this.toolMaterial, this.attackDamage, this.attackSpeed, this.propertiesModifier, this.customizer, this.attributeHelper);
+            return new ToolSet(this.name, this.toolMaterial, this.attackDamage, this.attackSpeed, this.propertiesModifier, this.customizer, this.additionalAttributes);
         }
 
         /**
