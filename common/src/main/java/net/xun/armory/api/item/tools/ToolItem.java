@@ -27,9 +27,34 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+/**
+ * A custom tool item that integrates with Minecraft's tool system and supports
+ * different tool types ({@link ToolType}), custom tool materials, attack damage,
+ * attack speed, and additional attribute modifiers.
+ *
+ * <p>This class overrides several {@link Item} methods to provide specific
+ * behavior for different tool types (e.g., swords take less durability damage
+ * when hurting enemies). The tool's mining properties are defined via the
+ * {@link Tool} data component, and attack attributes are applied through
+ * {@link ItemAttributeModifiers}.
+ *
+ * @since 2.3.0
+ */
 public class ToolItem extends Item {
     private final ToolType type;
 
+    /**
+     * Constructs a new {@code ToolItem} with the given type, material, base properties,
+     * attack damage, attack speed, and an optional consumer for additional attributes.
+     *
+     * @param type                the tool type (e.g., {@code SWORD}, {@code PICKAXE}); cannot be null
+     * @param material            the tool material providing durability, speed, enchantment value, and repair items
+     * @param properties          the base item properties (e.g., stack size, fire resistance)
+     * @param attackDamage        the base attack damage to add (the material's damage bonus is added automatically)
+     * @param attackSpeed         the attack speed modifier (usually a negative value for slower tools)
+     * @param additionalAttributes a consumer to add extra attribute modifiers to the item (may be null)
+     * @throws NullPointerException if {@code type} is null
+     */
     public ToolItem(ToolType type, ToolMaterial material, Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
         super(applyProperties(type, material, properties, attackDamage, attackSpeed, additionalAttributes));
         this.type = Objects.requireNonNull(type, "type");
@@ -55,6 +80,18 @@ public class ToolItem extends Item {
             stack.hurtAndBreak(2, attacker, EquipmentSlot.MAINHAND);
     }
 
+    /**
+     * Applies the tool material and attack stats to the item properties,
+     * building the required {@link Tool} and {@link ItemAttributeModifiers} components.
+     *
+     * @param type                the tool type
+     * @param material            the tool material
+     * @param base                the base item properties
+     * @param attackDamage        the base attack damage (added to material's bonus)
+     * @param attackSpeed         the attack speed modifier
+     * @param additionalAttributes optional consumer for extra attributes
+     * @return the configured item properties
+     */
     private static Item.Properties applyProperties(ToolType type, ToolMaterial material, Item.Properties base, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
         Item.Properties properties = base
                 .durability(material.durability())

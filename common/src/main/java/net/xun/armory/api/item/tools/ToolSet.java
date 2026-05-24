@@ -4,6 +4,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 import net.xun.armory.api.item.ItemSet;
+import net.xun.armory.impl.item.tools.ToolFactory;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -19,11 +20,10 @@ import java.util.function.UnaryOperator;
  * as a complete collection.
  * </p>
  *
- * <h2>Usage Example (with NeoForge) :</h2>
- *
+ * <h2>Usage Example (with NeoForge):</h2>
  * <pre>{@code
  * // Create a diamond tool set with vanilla balance
- * ToolSet diamondTools = new ToolSet.Builder("diamond", Tiers.DIAMOND)
+ * ToolSet diamondTools = new ToolSet.Builder("diamond", ToolMaterial.DIAMOND)
  *     .withVanillaBalance()
  *     .build();
  *
@@ -164,7 +164,6 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * attack statistics, item properties, and custom creation logic.
      * </p>
      * <p>
-     * </p>
      * <strong>Default Values:</strong>
      * <ul>
      *   <li>Attack damage: 0.0F for all tools</li>
@@ -172,15 +171,15 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      *   <li>Properties supplier: {@code Item.Properties::new}</li>
      *   <li>Customizer: {@link DefaultToolCustomizer#INSTANCE}</li>
      * </ul>
+     * </p>
      *
      * <h2>Example Usage:</h2>
-     *
      * <pre>{@code
      * // Create netherite tools with custom stats
-     * ToolSet netheriteTools = new ToolSet.Builder("netherite", Tiers.NETHERITE, new GenericAttributeHelper())
-     *     .withToolStats(ToolType.AXE, 5.0F, 1.0F)  // More damage, faster axe
-     *     .withToolStats(ToolType.HOE, -4.0F, 4.0F)    // Same as other hoes (tweaked because of attackDamageBonus)
-     *     .withItemPropertiesSupplier(() -> new Item.Properties().fireResistant().rarity(Rarity.RARE))
+     * ToolSet netheriteTools = new ToolSet.Builder("netherite", Tiers.NETHERITE)
+     *     .withToolStats(ToolType.AXE, 5.0F, 1.0F)   // More damage, faster axe
+     *     .withToolStats(ToolType.HOE, -4.0F, 4.0F) // Same as other hoes (tweaked because of attackDamageBonus)
+     *     .withItemProperties(properties -> properties.fireResistant().rarity(Rarity.RARE))
      *     .build();
      * }</pre>
      *
@@ -198,16 +197,12 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
         private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
 
         /**
-         * Constructs a new builder for a tool set with the specified base name and tier.
+         * Constructs a new builder for a tool set with the specified base name and material.
          *
-         * @param name base name for tools (e.g., "iron"), will be appended with
-         *             tool-specific suffixes
-         * @param toolMaterial material tier for all tools, defines base durability,
-         *             mining level, and base damage
-         * @throws NullPointerException if {@code name}, {@code tier}, or
-         *         {@code attributeHelper} is {@code null}
-         * @throws IllegalArgumentException if {@code name} is empty or contains
-         *         invalid characters
+         * @param name base name for tools (e.g., "iron"), will be appended with tool‑specific suffixes
+         * @param toolMaterial material tier for all tools, defines base durability, mining level, and base damage
+         * @throws NullPointerException if {@code name} or {@code toolMaterial} is {@code null}
+         * @throws IllegalArgumentException if {@code name} is empty or contains invalid characters (validation is deferred to registration)
          */
         public Builder(String name, ToolMaterial toolMaterial) {
             this.name = Objects.requireNonNull(name, "name");
@@ -237,12 +232,10 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * to the base attack speed.
          * </p>
          *
-         * @param damages attack damage bonuses for each tool type
-         *                (added to tier base damage)
-         * @param speeds attack speed modifiers for each tool type
+         * @param damages attack damage bonuses for each tool type (added to tier base damage)
+         * @param speeds  attack speed modifiers for each tool type
          * @return this builder for method chaining
-         * @throws IllegalArgumentException if array lengths don't match the
-         *         number of tool types (expected: 5)
+         * @throws IllegalArgumentException if array lengths don't match the number of tool types (expected: 5)
          * @see #withToolStats(ToolType, float, float)
          */
         public Builder withToolStats(float[] damages, float[] speeds) {
@@ -262,9 +255,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * modifier applied to the base attack speed.
          * </p>
          *
-         * @param type the tool type to configure
+         * @param type   the tool type to configure
          * @param damage attack damage bonus (added to tier base damage)
-         * @param speed attack speed modifier
+         * @param speed  attack speed modifier
          * @return this builder for method chaining
          * @throws NullPointerException if {@code type} is {@code null}
          */
@@ -281,17 +274,21 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * Minecraft, specifically matching iron-tier tool statistics.
          * </p>
          * <p>
-         * </p>
          * <strong>Applied Stats:</strong>
          * <table border="1">
          *   <caption>Vanilla Iron Tool Statistics</caption>
-         *   <tr><th>Tool Type</th><th>Damage Bonus</th><th>Attack Speed</th></tr>
-         *   <tr><td>Sword</td><td>+3.0</td><td>1.6</td></tr>
-         *   <tr><td>Axe</td><td>+6.0</td><td>0.9</td></tr>
-         *   <tr><td>Pickaxe</td><td>+1.0</td><td>1.2</td></tr>
-         *   <tr><td>Shovel</td><td>-2.0</td><td>3.0</td></tr>
-         *   <tr><td>Hoe</td><td>+1.5</td><td>1.0</td></tr>
+         *   <thead>
+         *     <tr><th>Tool Type</th><th>Damage Bonus</th><th>Attack Speed</th></tr>
+         *   </thead>
+         *   <tbody>
+         *     <tr><td>Sword</td><td>+3.0</td><td>1.6</td></tr>
+         *     <tr><td>Axe</td><td>+6.0</td><td>0.9</td></tr>
+         *     <tr><td>Pickaxe</td><td>+1.0</td><td>1.2</td></tr>
+         *     <tr><td>Shovel</td><td>-2.0</td><td>3.0</td></tr>
+         *     <tr><td>Hoe</td><td>+1.5</td><td>1.0</td></tr>
+         *   </tbody>
          * </table>
+         * </p>
          *
          * @return this builder for method chaining
          */
@@ -302,6 +299,18 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
             );
         }
 
+        /**
+         * Sets a modifier for the {@link Item.Properties} used when creating each tool item.
+         * <p>
+         * The provided function receives the default properties (initially an empty {@code Properties}
+         * instance) and can modify them as needed – for example, to set fire resistance, rarity,
+         * or custom durability.
+         * </p>
+         *
+         * @param propertiesModifier a function that transforms the base properties
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code propertiesModifier} is {@code null}
+         */
         public Builder withItemProperties(UnaryOperator<Item.Properties> propertiesModifier) {
             this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
             return this;
@@ -324,6 +333,18 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
             return this;
         }
 
+        /**
+         * Adds a consumer that can further modify the {@link ItemAttributeModifiers.Builder}
+         * after the default tool attributes have been applied.
+         * <p>
+         * This is useful for adding extra attribute modifiers (e.g., movement speed, knockback resistance)
+         * to all tools in the set.
+         * </p>
+         *
+         * @param additionalAttributes consumer that receives the attribute builder
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code additionalAttributes} is {@code null}
+         */
         public Builder withAdditionalAttributes(Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
             this.additionalAttributes = Objects.requireNonNull(additionalAttributes, "additionalAttributes");
             return this;
@@ -337,7 +358,7 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * </p>
          *
          * @return a new tool set with the configured properties
-         * @throws IllegalStateException if required configuration is missing or invalid
+         * @throws IllegalStateException if required configuration is missing or invalid (currently none)
          */
         public ToolSet build() {
             return new ToolSet(this.name, this.toolMaterial, this.attackDamage, this.attackSpeed, this.propertiesModifier, this.customizer, this.additionalAttributes);
@@ -347,9 +368,8 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * Validates that attack stat arrays have the correct length.
          *
          * @param damages attack damage bonuses array
-         * @param speeds attack speed modifiers array
-         * @throws IllegalArgumentException if array lengths don't match the
-         *         expected number of tool types
+         * @param speeds  attack speed modifiers array
+         * @throws IllegalArgumentException if array lengths don't match the expected number of tool types
          */
         private void validateArrayStats(float[] damages, float[] speeds) {
             int expected = ToolType.values().length;

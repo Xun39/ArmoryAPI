@@ -39,15 +39,10 @@ import net.xun.armory.impl.item.PieceType;
  */
 public enum ToolType implements PieceType {
 
-    /** Sword tool type */
     SWORD("_sword"),
-    /** Axe tool type */
     AXE("_axe"),
-    /** Pickaxe tool type */
     PICKAXE("_pickaxe"),
-    /** Hoe tool type */
     HOE("_hoe"),
-    /** Shovel tool type */
     SHOVEL("_shovel");
 
     /** Suffix appended to base name for registration */

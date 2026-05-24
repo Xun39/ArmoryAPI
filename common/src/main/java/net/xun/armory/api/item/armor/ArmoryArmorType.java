@@ -32,13 +32,9 @@ import net.xun.armory.impl.item.PieceType;
  */
 public enum ArmoryArmorType implements PieceType {
 
-    /** Head protection armor piece */
     HELMET("_helmet", ArmorType.HELMET, EquipmentSlot.HEAD),
-    /** Body protection armor piece */
     CHESTPLATE("_chestplate", ArmorType.CHESTPLATE, EquipmentSlot.CHEST),
-    /** Leg protection armor piece */
     LEGGINGS("_leggings", ArmorType.LEGGINGS, EquipmentSlot.LEGS),
-    /** Foot protection armor piece */
     BOOTS("_boots", ArmorType.BOOTS, EquipmentSlot.FEET);
 
     private final String nameSuffix;

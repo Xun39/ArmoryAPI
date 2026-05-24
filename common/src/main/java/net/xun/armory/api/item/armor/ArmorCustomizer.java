@@ -18,28 +18,28 @@ import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
  *
  * <pre>{@code
  * // Example 1: Fire-resistant armor with standard durability
- * ArmorCustomizer FIRE_RESISTANT = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
+ * ArmorCustomizer FIRE_RESISTANT = (type, material, properties, durabilityFactor) -> {
+ *     int durability = type.getArmorType().getDurability(durabilityFactor);
  *     return new ArmorItem(material, type.getArmorType(),
- *         props.durability(durability).fireResistant());
+ *         properties.durability(durability).fireResistant());
  * };
  *
  * // Example 2: Custom armor class with special behavior
- * ArmorCustomizer CUSTOM_CLASS = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
+ * ArmorCustomizer CUSTOM_CLASS = (type, material, properties, durabilityFactor) -> {
+ *     int durability = type.getArmorType().getDurability(durabilityFactor);
  *     return new CustomArmorItem(material, type.getArmorType(),
- *         props.durability(durability), type.getEquipmentSlot());
+ *         properties.durability(durability), type.getEquipmentSlot());
  * };
  *
  * // Example 3: Variable durability based on armor piece
- * ArmorCustomizer UNBALANCED = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
+ * ArmorCustomizer UNBALANCED = (type, material, properties, durabilityFactor) -> {
+ *     int durability = type.getArmorType().getDurability(durabilityFactor);
  *     // Helmets and boots receive additional durability
- *     if (type == ArmorType.HELMET || type == ArmorType.BOOTS) {
+ *     if (type == ArmoryArmorType.HELMET || type == ArmoryArmorType.BOOTS) {
  *         durability += 100;
  *     }
  *     return new ArmorItem(material, type.getArmorType(),
- *         props.durability(durability));
+ *         properties.durability(durability));
  * };
  * }</pre>
  *
@@ -58,17 +58,17 @@ public interface ArmorCustomizer {
      * </p>
      * <strong>Implementation Notes:</strong>
      * <ul>
-     *   <li>Durability calculation should typically use {@code type.getArmorType().getDurability(factor)}</li>
+     *   <li>Durability calculation should typically use {@code type.getArmorType().getDurability(durabilityFactor)}</li>
      *   <li>Properties may be modified but should not be shared between item instances</li>
      *   <li>The material holder provides armor statistics and enchantability</li>
      * </ul>
      *
      * @param type the type of armor piece to create (helmet, chestplate, leggings, or boots)
      * @param material holder for the armor material defining protection values and toughness
-     * @param durabilityFactor multiplier applied to the base material durability
      * @param properties base item properties (durability should be set by the implementation)
+     * @param durabilityFactor multiplier applied to the base material durability
      * @return a fully configured armor item instance, never {@code null}
-     * @throws NullPointerException if {@code type}, {@code material}, or {@code props} is {@code null}
+     * @throws NullPointerException if {@code type}, {@code material}, or {@code properties} is {@code null}
      * @throws IllegalArgumentException if the durability factor is negative or invalid
      * @see net.minecraft.world.item.equipment.ArmorType#getDurability(int)
      */

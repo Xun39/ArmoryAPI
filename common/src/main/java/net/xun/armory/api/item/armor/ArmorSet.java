@@ -3,6 +3,7 @@ package net.xun.armory.api.item.armor;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.Item;
+import net.xun.armory.impl.item.armor.ArmorFactory;
 import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
 import net.xun.armory.api.item.ItemSet;
 
@@ -18,11 +19,10 @@ import java.util.function.UnaryOperator;
  * upon first access and can be retrieved individually or as a complete collection.
  * </p>
  *
- * <h2>Usage Example (with NeoForge) :</h2>
- *
+ * <h2>Usage Example (with NeoForge):</h2>
  * <pre>{@code
  * // Create a basic armor set with default properties
- * Holder<ArmorMaterial> diamondMaterial = ...;
+ * ArmorMaterial diamondMaterial = ...;
  * ArmorSet diamondArmor = new ArmorSet.Builder("diamond", diamondMaterial)
  *     .withDurabilityFactor(33)  // Standard diamond multiplier
  *     .build();
@@ -133,14 +133,11 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
      * </ul>
      *
      * <h2>Example Usage:</h2>
-     *
      * <pre>{@code
      * // Create netherite armor with fire resistance
      * ArmorSet netheriteArmor = new ArmorSet.Builder("netherite", NETHERITE_MATERIAL)
      *     .withDurabilityFactor(37)  // Standard netherite multiplier
-     *     .withItemPropertiesSupplier(() -> new Item.Properties()
-     *         .fireResistant()
-     *         .rarity(Rarity.EPIC))
+     *     .withItemProperties(properties -> properties.fireResistant().rarity(Rarity.EPIC))
      *     .build();
      * }</pre>
      *
@@ -177,22 +174,29 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
          * <strong>Vanilla Reference Values:</strong>
          * <table border="1">
          *   <caption>Vanilla Durability Factors</caption>
-         *   <tr><th>Material</th><th>Durability Factor</th></tr>
-         *   <tr><td>Leather</td><td>5</td></tr>
-         *   <tr><td>Chain</td><td>15</td></tr>
-         *   <tr><td>Iron</td><td>15</td></tr>
-         *   <tr><td>Gold</td><td>7</td></tr>
-         *   <tr><td>Diamond</td><td>33</td></tr>
-         *   <tr><td>Netherite</td><td>37</td></tr>
+         *   <thead>
+         *     <tr><th>Material</th><th>Durability Factor</th></tr>
+         *   </thead>
+         *   <tbody>
+         *     <tr><td>Leather</td><td>5</td></tr>
+         *     <tr><td>Chain</td><td>15</td></tr>
+         *     <tr><td>Iron</td><td>15</td></tr>
+         *     <tr><td>Gold</td><td>7</td></tr>
+         *     <tr><td>Diamond</td><td>33</td></tr>
+         *     <tr><td>Netherite</td><td>37</td></tr>
+         *   </tbody>
          * </table>
-         *
          * <table border="1">
          *   <caption>Vanilla Armor Type Base Durability</caption>
-         *   <tr><th>Armor type</th><th>Base Durability</th></tr>
-         *   <tr><td>Helmet</td><td>11</td></tr>
-         *   <tr><td>Chestplate</td><td>16</td></tr>
-         *   <tr><td>Leggings</td><td>15</td></tr>
-         *   <tr><td>Boots</td><td>13</td></tr>
+         *   <thead>
+         *     <tr><th>Armor type</th><th>Base Durability</th></tr>
+         *   </thead>
+         *   <tbody>
+         *     <tr><td>Helmet</td><td>11</td></tr>
+         *     <tr><td>Chestplate</td><td>16</td></tr>
+         *     <tr><td>Leggings</td><td>15</td></tr>
+         *     <tr><td>Boots</td><td>13</td></tr>
+         *   </tbody>
          * </table>
          *
          * @param durabilityFactor multiplier for base armor type durability
@@ -204,6 +208,18 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
             return this;
         }
 
+        /**
+         * Sets a modifier for the {@link Item.Properties} used when creating each armor item.
+         * <p>
+         * The provided function receives the default properties (initially an empty {@code Properties}
+         * instance) and can modify them as needed – for example, to set fire resistance, rarity,
+         * or custom durability.
+         * </p>
+         *
+         * @param propertiesModifier a function that transforms the base properties
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code propertiesModifier} is {@code null}
+         */
         public Builder withItemProperties(UnaryOperator<Item.Properties> propertiesModifier) {
             this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
             return this;
@@ -234,8 +250,8 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
          * the specified properties. The returned ArmorSet is immutable.
          * </p>
          *
-         * @return New armor set instance
-         * @throws IllegalStateException if required configuration is invalid
+         * @return new armor set instance
+         * @throws IllegalStateException if required configuration is invalid (currently none)
          */
         public ArmorSet build() {
             return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesModifier, this.customizer);
