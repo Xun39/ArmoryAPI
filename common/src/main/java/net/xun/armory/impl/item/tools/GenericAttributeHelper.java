@@ -4,8 +4,10 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.api.item.tools.AttributeHelper;
+import net.xun.armory.api.item.tools.ToolType;
 
 /**
  * Default implementation of {@link AttributeHelper} applying standard
@@ -36,73 +38,25 @@ import net.xun.armory.api.item.tools.AttributeHelper;
  */
 public class GenericAttributeHelper implements AttributeHelper {
 
-    /**
-     * Applies standard combat attributes to item properties using Minecraft's
-     * attribute modifier system.
-     * <p>
-     * This method enhances the provided item properties by adding attribute
-     * modifiers for attack damage and attack speed. Both modifiers are applied
-     * exclusively to the {@link EquipmentSlotGroup#MAINHAND} equipment slot.
-     * </p>
-     *
-     * @param properties initial item properties to modify, never {@code null}
-     * @param damage total attack damage value (tier base damage + tool bonus),
-     *               typically between 0.0F and 15.0F for balanced tools
-     * @param speed attack speed value in attacks per second (not the modifier offset),
-     *              typically between 0.5F and 4.0F for balanced tools
-     * @return modified properties with attack damage and speed attribute modifiers,
-     *         never {@code null}
-     * @throws NullPointerException if {@code properties} is {@code null}
-     * @throws IllegalArgumentException if attribute values would result in
-     *         nonsensical modifiers (e.g., negative attack damage for weapons)
-     *
-     * @see #createAttributeModifiers(float, float)
-     */
     @Override
-    public Item.Properties applyAttributes(Item.Properties properties, float damage, float speed) {
-        return properties.attributes(createAttributeModifiers(damage, speed));
+    public Item.Properties apply(Item.Properties properties, ToolType type, ToolMaterial material, float attackDamage, float attackSpeed) {
+        return properties.attributes(createAttributeModifiers(attackDamage, attackSpeed));
     }
 
-    /**
-     * Creates attribute modifiers for attack damage and speed following
-     * vanilla Minecraft conventions.
-     * <p>
-     * This method constructs an {@link ItemAttributeModifiers} instance containing
-     * two attribute modifiers:
-     * <ol>
-     *   <li>Attack damage modifier with ID {@link Item#BASE_ATTACK_DAMAGE_ID}</li>
-     *   <li>Attack speed modifier with ID {@link Item#BASE_ATTACK_SPEED_ID},
-     *       converting the speed value to an offset from the base 4.0</li>
-     * </ol>
-     * Both modifiers are additive and apply only to the main hand equipment slot.
-     * </p>
-     *
-     * </p>
-     *
-     * @param damage total attack damage value to apply,
-     *               directly used as the modifier amount
-     * @param speed attack speed value in attacks per second,
-     *              converted to modifier offset internally
-     * @return configured attribute modifiers container with both damage and
-     *         speed modifiers, never {@code null}
-     *
-     * @see AttributeModifier
-     * @see ItemAttributeModifiers.Builder
-     */
-    private static ItemAttributeModifiers createAttributeModifiers(float damage, float speed) {
+    private static ItemAttributeModifiers createAttributeModifiers(float attackDamage, float attackSpeed) {
         return ItemAttributeModifiers.builder()
                 .add(Attributes.ATTACK_DAMAGE,
                         new AttributeModifier(
                                 Item.BASE_ATTACK_DAMAGE_ID,
-                                damage,
+                                attackDamage,
                                 AttributeModifier.Operation.ADD_VALUE
                         ), EquipmentSlotGroup.MAINHAND)
                 .add(Attributes.ATTACK_SPEED,
                         new AttributeModifier(
                                 Item.BASE_ATTACK_SPEED_ID,
-                                speed - 4,
+                                attackSpeed - 4,
                                 AttributeModifier.Operation.ADD_VALUE
-                        ),EquipmentSlotGroup.MAINHAND)
+                        ), EquipmentSlotGroup.MAINHAND)
                 .build();
     }
 }

@@ -61,5 +61,5 @@ public interface ToolCustomizer {
      * @throws IllegalArgumentException if the tool material is incompatible with the
      *         tool type or properties are invalid
      */
-    Item createTool(ToolType type, ToolMaterial toolMaterial, Item.Properties properties);
+    Item create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed);
 }

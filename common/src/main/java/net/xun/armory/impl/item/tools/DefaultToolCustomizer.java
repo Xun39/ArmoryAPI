@@ -34,25 +34,17 @@ import net.xun.armory.api.item.tools.ToolSet;
  * @see ToolSet.Builder
  * @since 2.0.0
  */
-public final class DefaultToolCustomizer {
+public enum DefaultToolCustomizer implements ToolCustomizer {
+    INSTANCE;
 
-    /**
-     * Private constructor to prevent instantiation.
-     */
-    private DefaultToolCustomizer() {}
-
-    /**
-     * The singleton instance of the default tool customizer.
-     * <p>
-     * This implementation creates standard Minecraft tool items using the
-     * appropriate tool class for each {@link ToolType}.
-     * </p>
-     */
-    public static ToolCustomizer INSTANCE = ((type, material, properties) -> switch (type) {
-        case SWORD -> new SwordItem(material, 0.0F, 0.0F, properties);
-        case AXE -> new AxeItem(material, 0.0F, 0.0F, properties);
-        case PICKAXE -> new PickaxeItem(material, 0.0F, 0.0F, properties);
-        case HOE -> new HoeItem(material, 0.0F, 0.0F, properties);
-        case SHOVEL -> new ShovelItem(material, 0.0F, 0.0F, properties);
-    });
+    @Override
+    public Item create(ToolType type, ToolMaterial material, Item.Properties properties, float attackDamage, float attackSpeed) {
+        return switch (type) {
+            case SWORD -> new SwordItem(material, attackDamage, attackSpeed, properties);
+            case AXE -> new AxeItem(material, attackDamage, attackSpeed, properties);
+            case PICKAXE -> new PickaxeItem(material, attackDamage, attackSpeed, properties);
+            case HOE -> new HoeItem(material, attackDamage, attackSpeed, properties);
+            case SHOVEL -> new ShovelItem(material, attackDamage, attackSpeed, properties);
+        };
+    }
 }

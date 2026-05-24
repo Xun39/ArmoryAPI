@@ -1,6 +1,7 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ToolMaterial;
 import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 /**
@@ -26,10 +27,10 @@ public interface AttributeHelper {
      * </p>
      *
      * @param properties Initial item properties to enhance
-     * @param damage Total attack damage value (including tier base)
-     * @param speed Attack speed value
+     * @param attackDamage Total attack damage value (including tier base)
+     * @param attackSpeed Attack speed value
      * @return Enhanced item properties with combat attributes applied
      * @throws NullPointerException if properties is null
      */
-    Item.Properties applyAttributes(Item.Properties properties, float damage, float speed);
+    Item.Properties apply(Item.Properties properties, ToolType type, ToolMaterial material, float attackDamage, float attackSpeed);
 }

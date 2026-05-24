@@ -2,6 +2,7 @@ package net.xun.armory.impl.util;
 
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -31,19 +32,37 @@ import java.util.function.Supplier;
 public class LazyReference<T> implements Supplier<T> {
 
     private final String name;
-    private final Supplier<T> supplier;
-    private T value;
+    private volatile Supplier<T> delegate;
 
     /**
      * Constructs a new LazyReference with a name and a supplier.
      *
      * @param name     a descriptive name for the object (used for debugging or logging)
-     * @param supplier the supplier that will provide the object when needed
      * @throws NullPointerException if name or supplier is null
      */
-    public LazyReference(String name, Supplier<T> supplier) {
-        this.name = name;
-        this.supplier = supplier;
+    public LazyReference(String name) {
+        this.name = Objects.requireNonNull(name, "name");
+    }
+
+    /**
+     * Gets the name associated with this lazy reference.
+     * <p>
+     * This name is typically used for registration or identification purposes,
+     * such as constructing registry IDs for items.
+     * </p>
+     *
+     * @return the name of this lazy reference
+     */
+    public String getName() {
+        return name;
+    }
+
+    public synchronized void bind(Supplier<T> delegate) {
+        this.delegate = Objects.requireNonNull(delegate, "delegate");
+    }
+
+    public boolean isBound() {
+        return delegate != null;
     }
 
     /**
@@ -59,22 +78,10 @@ public class LazyReference<T> implements Supplier<T> {
      */
     @Override
     public T get() {
-        if (value == null) {
-            value = supplier.get();
+        Supplier<T> current = delegate;
+        if (current == null) {
+            throw new IllegalStateException("Item reference '" + name + "' has not been registered yet");
         }
-        return value;
-    }
-
-    /**
-     * Gets the name associated with this lazy reference.
-     * <p>
-     * This name is typically used for registration or identification purposes,
-     * such as constructing registry IDs for items.
-     * </p>
-     *
-     * @return the name of this lazy reference
-     */
-    public String getName() {
-        return name;
+        return current.get();
     }
 }

@@ -1,13 +1,12 @@
 package net.xun.armory.api.item.armor;
 
-import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.Item;
 import net.xun.armory.impl.item.PieceType;
 import net.xun.armory.impl.item.ItemPieceFactory;
 
-import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Factory implementation that creates armor items for a complete armor set.
@@ -26,32 +25,23 @@ import java.util.function.Supplier;
  * @see ArmorCustomizer
  * @since 2.0.0
  */
-public class ArmorFactory implements ItemPieceFactory<ArmoryArmorType, ArmorItem> {
+public final class ArmorFactory implements ItemPieceFactory<ArmoryArmorType, ArmorItem> {
 
-    private final Holder<ArmorMaterial> material;
+    private final ArmorMaterial material;
     private final int durabilityFactor;
-    private final Supplier<Item.Properties> propertiesSupplier;
-    private final ArmorCustomizer configurator;
+    private final UnaryOperator<Item.Properties> propertiesModifier;
+    private final ArmorCustomizer customizer;
 
-    /**
-     * Constructs a new armor factory with the specified configuration.
-     *
-     * @param material holder for the armor material, never {@code null}
-     * @param durabilityFactor multiplier for base material durability
-     * @param propertiesSupplier supplier for item properties (called once per piece)
-     * @param configurator customizer for armor item creation, never {@code null}
-     * @throws NullPointerException if any required parameter is {@code null}
-     */
     public ArmorFactory(
-            Holder<ArmorMaterial> material,
+            ArmorMaterial material,
             int durabilityFactor,
-            Supplier<Item.Properties> propertiesSupplier,
+            UnaryOperator<Item.Properties> propertiesModifier,
             ArmorCustomizer configurator
     ) {
         this.material = material;
         this.durabilityFactor = durabilityFactor;
-        this.propertiesSupplier = propertiesSupplier;
-        this.configurator = configurator;
+        this.propertiesModifier = propertiesModifier;
+        this.customizer = configurator;
     }
 
     /**
@@ -65,31 +55,15 @@ public class ArmorFactory implements ItemPieceFactory<ArmoryArmorType, ArmorItem
         return piece;
     }
 
-    /**
-     * Creates an armor item for the specified piece type.
-     * <p>
-     * This method:
-     * </p>
-     * <ol>
-     *   <li>Obtains fresh item properties from the supplier</li>
-     *   <li>Delegates to the configured {@link ArmorCustomizer} for item creation</li>
-     *   <li>Returns a fully configured armor item</li>
-     * </ol>
-     *
-     * @param piece the type of armor piece to create
-     * @return a configured armor item for the specified piece
-     * @throws NullPointerException if {@code piece} is {@code null}
-     * @throws IllegalStateException if the customizer fails to create the item
-     */
     @Override
-    public ArmorItem create(ArmoryArmorType piece) {
-        Item.Properties properties = propertiesSupplier.get();
+    public ArmorItem create(ArmoryArmorType piece, Item.Properties properties) {
+        Item.Properties effective = propertiesModifier.apply(properties);
 
-        return configurator.createArmorItem(
+        return customizer.create(
                 piece,
                 material,
-                durabilityFactor,
-                properties
+                effective,
+                durabilityFactor
         );
     }
 }

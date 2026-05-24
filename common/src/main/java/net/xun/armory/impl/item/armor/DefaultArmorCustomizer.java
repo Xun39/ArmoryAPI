@@ -1,8 +1,11 @@
 package net.xun.armory.impl.item.armor;
 
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.xun.armory.api.item.armor.ArmorCustomizer;
 import net.xun.armory.api.item.armor.ArmorSet;
+import net.xun.armory.api.item.armor.ArmoryArmorType;
 
 /**
  * Provides the default armor customization implementation using standard {@link ArmorItem}
@@ -21,29 +24,16 @@ import net.xun.armory.api.item.armor.ArmorSet;
  * @see ArmorSet.Builder
  * @since 2.0.0
  */
-public final class DefaultArmorCustomizer {
+public enum DefaultArmorCustomizer implements ArmorCustomizer {
+    INSTANCE;
 
-    /**
-     * Private constructor to prevent instantiation.
-     */
-    private DefaultArmorCustomizer() {}
-
-    /**
-     * The singleton instance of the default armor customizer.
-     * <p>
-     * This implementation creates standard {@link ArmorItem} instances with durability
-     * calculated as: {@code armorType.getDurability(durabilityFactor)}.
-     * </p>
-     * <p>
-     * <strong>Thread Safety:</strong> This instance is thread-safe and stateless.
-     * </p>
-     */
-    public static ArmorCustomizer INSTANCE = ((type, material, durabilityFactor, props) -> {
+    @Override
+    public ArmorItem create(ArmoryArmorType type, ArmorMaterial material, Item.Properties properties, int durabilityFactor) {
         int durability = type.getArmorType().getDurability(durabilityFactor);
         return new ArmorItem(
-                material.value(),
+                material,
                 type.getArmorType(),
-                props.durability(durability)
+                properties.durability(durability)
         );
-    });
+    }
 }

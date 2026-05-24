@@ -7,6 +7,7 @@ import net.xun.armory.impl.item.tools.GenericAttributeHelper;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Represents a complete set of tools including sword, axe, pickaxe, shovel, and hoe.
@@ -51,7 +52,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
      *                     never {@code null}
      * @param attackSpeed map of attack speed modifiers per tool type,
      *                    never {@code null}
-     * @param propertiesSupplier supplier for item properties applied to all tools,
+     * @param propertiesModifier supplier for item properties applied to all tools,
      *                           never {@code null}
      * @param customizer strategy for creating individual tool items,
      *                   never {@code null}
@@ -60,19 +61,20 @@ public class ToolSet extends ItemSet<ToolType, Item> {
      * @throws NullPointerException if any required parameter is {@code null}
      * @throws IllegalArgumentException if attack maps are incomplete or invalid
      */
-    protected ToolSet(String name,
-                      ToolMaterial toolMaterial,
-                      EnumMap<ToolType, Float> attackDamage,
-                      EnumMap<ToolType, Float> attackSpeed,
-                      Supplier<Item.Properties> propertiesSupplier,
-                      ToolCustomizer customizer,
-                      AttributeHelper attributeHelper
+    protected ToolSet(
+            String name,
+            ToolMaterial toolMaterial,
+            EnumMap<ToolType, Float> attackDamage,
+            EnumMap<ToolType, Float> attackSpeed,
+            UnaryOperator<Item.Properties> propertiesModifier,
+            ToolCustomizer customizer,
+            AttributeHelper attributeHelper
     ) {
 
         super(
                 name,
                 ToolType.class,
-                new ToolFactory(toolMaterial, attackDamage, attackSpeed, propertiesSupplier, customizer, attributeHelper)
+                new ToolFactory(toolMaterial, attackDamage, attackSpeed, propertiesModifier, customizer, attributeHelper)
         );
     }
 
@@ -192,7 +194,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
         private final ToolMaterial toolMaterial;
         private final EnumMap<ToolType, Float> attackDamage = new EnumMap<>(ToolType.class);
         private final EnumMap<ToolType, Float> attackSpeed = new EnumMap<>(ToolType.class);
-        private Supplier<Item.Properties> propertiesSupplier = Item.Properties::new;
+        private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
         private AttributeHelper attributeHelper = new GenericAttributeHelper();
 
@@ -201,16 +203,16 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          *
          * @param name base name for tools (e.g., "iron"), will be appended with
          *             tool-specific suffixes
-         * @param tier material tier for all tools, defines base durability,
+         * @param toolMaterial material tier for all tools, defines base durability,
          *             mining level, and base damage
          * @throws NullPointerException if {@code name}, {@code tier}, or
          *         {@code attributeHelper} is {@code null}
          * @throws IllegalArgumentException if {@code name} is empty or contains
          *         invalid characters
          */
-        public Builder(String name, ToolMaterial tier) {
-            this.name = name;
-            this.toolMaterial = tier;
+        public Builder(String name, ToolMaterial toolMaterial) {
+            this.name = Objects.requireNonNull(name, "name");
+            this.toolMaterial = Objects.requireNonNull(toolMaterial, "toolMaterial");
             initializeDefaultStats();
         }
 
@@ -301,40 +303,8 @@ public class ToolSet extends ItemSet<ToolType, Item> {
             );
         }
 
-        /**
-         * <strong>Warning:</strong> Sets shared item properties for all tools.
-         * <p>
-         * This method reuses the same {@link Item.Properties} instance for all
-         * tools, which may cause issues if properties are mutated internally.
-         * For most cases, prefer {@link #withItemPropertiesSupplier(Supplier)}
-         * which creates fresh properties for each tool.
-         * </p>
-         *
-         * @param properties base properties applied to all tools
-         * @return this builder for method chaining
-         * @throws NullPointerException if {@code properties} is {@code null}
-         * @see #withItemPropertiesSupplier(Supplier)
-         */
-        public Builder withItemProperties(Item.Properties properties) {
-            this.propertiesSupplier = () -> properties;
-            return this;
-        }
-
-        /**
-         * Sets a supplier for item properties, called once per tool during creation.
-         * <p>
-         * This is the preferred method for setting properties as it ensures each
-         * tool receives a fresh {@link Item.Properties} instance, avoiding
-         * potential mutation conflicts.
-         * </p>
-         *
-         * @param propertiesSupplier supplier providing base properties for each tool
-         * @return this builder for method chaining
-         * @throws NullPointerException if {@code propertiesSupplier} is {@code null}
-         * @see #withItemProperties(Item.Properties)
-         */
-        public Builder withItemPropertiesSupplier(Supplier<Item.Properties> propertiesSupplier) {
-            this.propertiesSupplier = propertiesSupplier;
+        public Builder withItemProperties(UnaryOperator<Item.Properties> propertiesModifier) {
+            this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
             return this;
         }
 
@@ -351,7 +321,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          * @see ToolCustomizer
          */
         public Builder withCustomizer(ToolCustomizer customizer) {
-            this.customizer = customizer;
+            this.customizer = Objects.requireNonNull(customizer, "customizer");
             return this;
         }
 
@@ -369,7 +339,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          * @see AttributeHelper
          */
         public Builder withAttributeHelper(AttributeHelper attributeHelper) {
-            this.attributeHelper = attributeHelper;
+            this.attributeHelper = Objects.requireNonNull(attributeHelper, "attributeHelper");
             return this;
         }
 
@@ -384,7 +354,7 @@ public class ToolSet extends ItemSet<ToolType, Item> {
          * @throws IllegalStateException if required configuration is missing or invalid
          */
         public ToolSet build() {
-            return new ToolSet(this.name, this.toolMaterial, this.attackDamage, this.attackSpeed, this.propertiesSupplier, this.customizer, this.attributeHelper);
+            return new ToolSet(this.name, this.toolMaterial, this.attackDamage, this.attackSpeed, this.propertiesModifier, this.customizer, this.attributeHelper);
         }
 
         /**

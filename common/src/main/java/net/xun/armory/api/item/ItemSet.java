@@ -6,10 +6,8 @@ import net.xun.armory.impl.item.ItemPieceFactory;
 import net.xun.armory.impl.item.PieceType;
 import net.xun.armory.impl.util.LazyReference;
 
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -35,7 +33,9 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
     protected final String setName;
 
     /** Map storing lazy references to each item piece in the set. */
-    protected final Map<P, LazyReference<T>> pieces;
+    private final EnumMap<P, LazyReference<T>> pieces;
+    private final Map<String, LazyReference<T>> piecesByRegistryName;
+    private final EnumMap<P, Function<Item.Properties, T>> factories;
 
     /**
      * Constructs a new item set with the specified configuration.
@@ -60,16 +60,24 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
      * @throws IllegalArgumentException if the piece enum class has no constants
      */
     protected ItemSet(String setName, Class<P> pieceEnumClass, ItemPieceFactory<P, T> factory) {
-        this.setName = setName;
+        this.setName = Objects.requireNonNull(setName, "setName");
+
+        Objects.requireNonNull(pieceEnumClass, "pieceEnumClass");
+        Objects.requireNonNull(factory, "factory");
+
         this.pieces = new EnumMap<>(pieceEnumClass);
+        this.piecesByRegistryName = new LinkedHashMap<>();
+        this.factories = new EnumMap<>(pieceEnumClass);
 
         for (P piece : pieceEnumClass.getEnumConstants()) {
-            PieceType pieceType = factory.getPieceType(piece);
+            PieceType pieceType = Objects.requireNonNull(factory.getPieceType(piece), "pieceType");
 
-            pieces.put(piece, new LazyReference<>(
-                    setName + pieceType.getNameSuffix(),
-                    () -> factory.create(piece)
-            ));
+            String registryName = setName + pieceType.getNameSuffix();
+            LazyReference<T> reference = new LazyReference<>(registryName);
+
+            pieces.put(piece, reference);
+            piecesByRegistryName.put(registryName, reference);
+            factories.put(piece, properties -> factory.create(piece, properties));
         }
     }
 
@@ -97,17 +105,28 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
      *
      * @see ResourceLocation#fromNamespaceAndPath(String, String)
      */
-    public Map<ResourceLocation, Supplier<T>> getPiecesForRegistration(String modId) {
-        Map<ResourceLocation, Supplier<T>> registryEntries = new LinkedHashMap<>();
+    public Map<ResourceLocation, Function<Item.Properties, T>> getPiecesForRegistration(String modId) {
+        Map<ResourceLocation, Function<Item.Properties, T>> registryEntries = new LinkedHashMap<>();
 
-        for (LazyReference<T> ref : pieces.values()) {
+        for (Map.Entry<P, Function<Item.Properties, T>> entry : factories.entrySet()) {
+            P piece = entry.getKey();
+            String registryName = pieces.get(piece).getName();
+
             registryEntries.put(
-                    ResourceLocation.fromNamespaceAndPath(modId, ref.getName()),
-                    ref
+                    ResourceLocation.fromNamespaceAndPath(modId, registryName),
+                    entry.getValue()
             );
         }
 
         return registryEntries;
+    }
+
+    public void bind(String registryName, Supplier<T> supplier) {
+        LazyReference<T> reference = piecesByRegistryName.get(registryName);
+        if (reference == null) {
+            throw new IllegalArgumentException("Unknown registry name '" + registryName + "' for set '" + setName + "'");
+        }
+        reference.bind(supplier);
     }
 
     /**
@@ -124,6 +143,10 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
      * @throws IllegalArgumentException if {@code piece} is not part of this set
      */
     public Supplier<T> get(P piece) {
+        LazyReference<T> reference = pieces.get(piece);
+        if (reference == null) {
+            throw new IllegalArgumentException("Unknown piece '" + piece + "' for set '" + setName + "'");
+        }
         return pieces.get(piece);
     }
 

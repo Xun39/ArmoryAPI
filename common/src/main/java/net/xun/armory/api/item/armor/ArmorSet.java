@@ -1,13 +1,14 @@
 package net.xun.armory.api.item.armor;
 
-import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.Item;
 import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
 import net.xun.armory.api.item.ItemSet;
 
+import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * Represents a complete set of armor consisting of helmet, chestplate, leggings, and boots.
@@ -48,21 +49,21 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
      * @param name base name for all armor pieces in the set (e.g., "diamond")
      * @param material holder for the armor material defining protection and toughness
      * @param durabilityFactor multiplier for the material's base durability
-     * @param propertiesSupplier supplier for item properties applied to all pieces
+     * @param propertiesModifier supplier for item properties applied to all pieces
      * @param customizer strategy for creating individual armor items
      * @throws NullPointerException if any required parameter is {@code null}
      * @throws IllegalArgumentException if durabilityFactor is negative
      */
     protected ArmorSet(String name,
-                       Holder<ArmorMaterial> material,
+                       ArmorMaterial material,
                        int durabilityFactor,
-                       Supplier<Item.Properties> propertiesSupplier,
+                       UnaryOperator<Item.Properties> propertiesModifier,
                        ArmorCustomizer customizer
     ) {
         super(
                 name,
                 ArmoryArmorType.class,
-                new ArmorFactory(material, durabilityFactor, propertiesSupplier, customizer)
+                new ArmorFactory(material, durabilityFactor, propertiesModifier, customizer)
         );
     }
 
@@ -149,9 +150,9 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
      */
     public static class Builder {
         private final String name;
-        private final Holder<ArmorMaterial> material;
+        private final ArmorMaterial material;
         private int durabilityFactor;
-        private Supplier<Item.Properties> propertiesSupplier = Item.Properties::new;
+        private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private ArmorCustomizer customizer = DefaultArmorCustomizer.INSTANCE;
 
         /**
@@ -162,9 +163,9 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
          * @throws NullPointerException if {@code name} or {@code material} is {@code null}
          * @throws IllegalArgumentException if {@code name} is empty or contains invalid characters
          */
-        public Builder(String name, Holder<ArmorMaterial> material) {
-            this.name = name;
-            this.material = material;
+        public Builder(String name, ArmorMaterial material) {
+            this.name = Objects.requireNonNull(name, "name");
+            this.material = Objects.requireNonNull(material, "material");
         }
 
         /**
@@ -203,40 +204,8 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
             return this;
         }
 
-        /**
-         * <strong>Warning:</strong> Sets shared item properties for all armor pieces.
-         * <p>
-         * This method reuses the same {@link Item.Properties} instance for all armor pieces,
-         * which may cause issues if properties are mutated internally. For most cases,
-         * prefer {@link #withItemPropertiesSupplier(Supplier)} which creates fresh
-         * properties for each piece.
-         * </p>
-         *
-         * @param properties base properties applied to all armor pieces
-         * @return this builder for method chaining
-         * @throws NullPointerException if {@code properties} is {@code null}
-         * @see #withItemPropertiesSupplier(Supplier)
-         */
-        public Builder withItemProperties(Item.Properties properties) {
-            this.propertiesSupplier = () -> properties;
-            return this;
-        }
-
-        /**
-         * Sets a supplier for item properties, called once per armor piece during creation.
-         * <p>
-         * This is the preferred method for setting properties as it ensures each armor
-         * piece receives a fresh {@link Item.Properties} instance, avoiding potential
-         * mutation conflicts.
-         * </p>
-         *
-         * @param propertiesSupplier supplier providing base properties for each armor piece
-         * @return this builder for method chaining
-         * @throws NullPointerException if {@code propertiesSupplier} is {@code null}
-         * @see #withItemProperties(Item.Properties)
-         */
-        public Builder withItemPropertiesSupplier(Supplier<Item.Properties> propertiesSupplier) {
-            this.propertiesSupplier = propertiesSupplier;
+        public Builder withItemProperties(UnaryOperator<Item.Properties> propertiesModifier) {
+            this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
             return this;
         }
 
@@ -254,7 +223,7 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
          * @see ArmorCustomizer
          */
         public Builder withCustomizer(ArmorCustomizer customizer) {
-            this.customizer = customizer;
+            this.customizer = Objects.requireNonNull(customizer, "customizer");
             return this;
         }
 
@@ -269,7 +238,7 @@ public class ArmorSet extends ItemSet<ArmoryArmorType, ArmorItem> {
          * @throws IllegalStateException if required configuration is invalid
          */
         public ArmorSet build() {
-            return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesSupplier, this.customizer);
+            return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesModifier, this.customizer);
         }
     }
 }
