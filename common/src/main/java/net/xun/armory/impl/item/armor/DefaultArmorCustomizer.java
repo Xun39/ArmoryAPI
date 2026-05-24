@@ -29,14 +29,12 @@ public enum DefaultArmorCustomizer implements ArmorCustomizer {
 
     /**
      * Creates a standard {@link ArmorItem} with the given configuration.
-     * <p>
      * The durability is calculated as:
      * <pre>{@code
      * int durability = type.getArmorType().getDurability(durabilityFactor);
      * }</pre>
      * The resulting item uses the provided {@code properties} with the durability set,
      * and the vanilla {@link ArmorItem} constructor.
-     * </p>
      *
      * @param type            the armor piece type (helmet, chestplate, etc.)
      * @param material        the armor material providing defense, toughness, and repair items

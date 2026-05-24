@@ -62,7 +62,6 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
 
     /**
      * Constructs a new item set with the specified configuration.
-     * <p>
      * This constructor initializes the item set by:
      * <ol>
      *   <li>Creating an {@link EnumMap} for the piece enum class</li>
@@ -70,7 +69,6 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
      *   <li>Creating a {@link LazyReference} for each piece using the factory</li>
      *   <li>Generating appropriate names for each piece</li>
      * </ol>
-     * </p>
      *
      * @param setName        the base name for all items in this set (e.g., "diamond"),
      *                       used to generate registry IDs, never {@code null}

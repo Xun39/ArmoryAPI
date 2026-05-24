@@ -60,7 +60,6 @@ public interface ToolCustomizer {
      * appropriate tool material, attack stats, and properties. The returned item
      * should be fully configured and ready for registration and in-game use.
      * </p>
-     * <p>
      * <strong>Implementation Notes:</strong>
      * <ul>
      *   <li>The {@code properties} parameter already includes durability,
@@ -72,7 +71,6 @@ public interface ToolCustomizer {
      *       attribute modifiers (e.g., movement speed, knockback).</li>
      *   <li>Custom implementations may return subclasses of {@link ToolItem}.</li>
      * </ul>
-     * </p>
      *
      * @param type the type of tool to create (sword, axe, etc.)
      * @param material material tier defining durability, mining level, and base damage

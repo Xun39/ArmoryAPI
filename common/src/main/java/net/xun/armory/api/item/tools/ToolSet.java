@@ -28,8 +28,13 @@ import java.util.function.UnaryOperator;
  *     .build();
  *
  * // Register all tool pieces
- * Map<ResourceLocation, Supplier<Item>> items = diamondTools.getItemsForRegistration("mymod");
- * items.forEach((id, supplier) -> ITEMS.register(id.getPath(), supplier));
+ * for (Map.Entry<ResourceLocation, Function<Item.Properties, ToolItem>> entry : diamondTools.getPiecesForRegistration(modID).entrySet()) {
+ *     ResourceLocation id = entry.getKey();
+ *     Function<Item.Properties, ToolItem> factory = entry.getValue();
+ *
+ *     var holder = ITEMS.registerItem(id.getPath(), factory);
+ *     diamondTools.bind(id.getPath(), holder);
+ * }
  *
  * // Access individual tools (with proper type casting)
  * Supplier<SwordItem> sword = diamondTools.getSword();
@@ -46,19 +51,19 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
     /**
      * Constructs a new ToolSet with the specified configuration.
      *
-     * @param name base name for all tools in the set (e.g., "diamond")
-     * @param toolMaterial material tier for all tools, never {@code null}
-     * @param attackDamage map of attack damage bonuses per tool type,
-     *                     never {@code null}
-     * @param attackSpeed map of attack speed modifiers per tool type,
-     *                    never {@code null}
-     * @param propertiesModifier supplier for item properties applied to all tools,
-     *                           never {@code null}
-     * @param customizer strategy for creating individual tool items,
-     *                   never {@code null}
+     * @param name                 base name for all tools in the set (e.g., "diamond")
+     * @param toolMaterial         material tier for all tools, never {@code null}
+     * @param attackDamage         map of attack damage bonuses per tool type,
+     *                             never {@code null}
+     * @param attackSpeed          map of attack speed modifiers per tool type,
+     *                             never {@code null}
+     * @param propertiesModifier   supplier for item properties applied to all tools,
+     *                             never {@code null}
+     * @param customizer           strategy for creating individual tool items,
+     *                             never {@code null}
      * @param additionalAttributes helper for applying combat attributes,
-     *                        never {@code null}
-     * @throws NullPointerException if any required parameter is {@code null}
+     *                             never {@code null}
+     * @throws NullPointerException     if any required parameter is {@code null}
      * @throws IllegalArgumentException if attack maps are incomplete or invalid
      */
     protected ToolSet(
@@ -146,7 +151,7 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
     /**
      * Internal helper method for type-safe tool retrieval.
      *
-     * @param <T> expected tool item type
+     * @param <T>  expected tool item type
      * @param type the tool type to retrieve
      * @return supplier for the specified tool type
      * @throws ClassCastException if the stored item is not of the expected type
@@ -163,7 +168,6 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * This builder enables detailed configuration of tool sets with per-tool
      * attack statistics, item properties, and custom creation logic.
      * </p>
-     * <p>
      * <strong>Default Values:</strong>
      * <ul>
      *   <li>Attack damage: 0.0F for all tools</li>
@@ -171,7 +175,6 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      *   <li>Properties supplier: {@code Item.Properties::new}</li>
      *   <li>Customizer: {@link DefaultToolCustomizer#INSTANCE}</li>
      * </ul>
-     * </p>
      *
      * <h2>Example Usage:</h2>
      * <pre>{@code
@@ -194,14 +197,15 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
         private final EnumMap<ToolType, Float> attackSpeed = new EnumMap<>(ToolType.class);
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
-        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
+        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {
+        };
 
         /**
          * Constructs a new builder for a tool set with the specified base name and material.
          *
-         * @param name base name for tools (e.g., "iron"), will be appended with tool‑specific suffixes
+         * @param name         base name for tools (e.g., "iron"), will be appended with tool‑specific suffixes
          * @param toolMaterial material tier for all tools, defines base durability, mining level, and base damage
-         * @throws NullPointerException if {@code name} or {@code toolMaterial} is {@code null}
+         * @throws NullPointerException     if {@code name} or {@code toolMaterial} is {@code null}
          * @throws IllegalArgumentException if {@code name} is empty or contains invalid characters (validation is deferred to registration)
          */
         public Builder(String name, ToolMaterial toolMaterial) {
@@ -273,7 +277,6 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          * Uses the standard damage bonuses and attack speeds from vanilla
          * Minecraft, specifically matching iron-tier tool statistics.
          * </p>
-         * <p>
          * <strong>Applied Stats:</strong>
          * <table border="1">
          *   <caption>Vanilla Iron Tool Statistics</caption>
@@ -288,7 +291,6 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
          *     <tr><td>Hoe</td><td>+1.5</td><td>1.0</td></tr>
          *   </tbody>
          * </table>
-         * </p>
          *
          * @return this builder for method chaining
          */

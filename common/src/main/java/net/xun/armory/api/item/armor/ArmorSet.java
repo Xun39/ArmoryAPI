@@ -28,8 +28,13 @@ import java.util.function.UnaryOperator;
  *     .build();
  *
  * // Register all armor pieces
- * Map<ResourceLocation, Supplier<ArmorItem>> items = diamondArmor.getItemsForRegistration("mymod");
- * items.forEach((id, supplier) -> ITEMS.register(id.getPath(), supplier));
+ * for (Map.Entry<ResourceLocation, Function<Item.Properties, ArmorItem>> entry : diamondArmor.getPiecesForRegistration(modID).entrySet()) {
+ *     ResourceLocation id = entry.getKey();
+ *     Function<Item.Properties, ArmorItem> factory = entry.getValue();
+ *
+ *     var holder = ITEMS.registerItem(id.getPath(), factory);
+ *     diamondArmor.bind(id.getPath(), holder);
+ * }
  *
  * // Access individual pieces
  * Supplier<ArmorItem> helmet = diamondArmor.getHelmet();
