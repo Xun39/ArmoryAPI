@@ -44,7 +44,7 @@ public enum DefaultToolCustomizer implements ToolCustomizer {
      * </p>
      *
      * @param type                the tool type to create
-     * @param toolMaterial        the material tier for the tool
+     * @param material        the material tier for the tool
      * @param properties          the item properties (durability, repair items, etc.)
      * @param attackDamage        the total attack damage bonus (including material bonus)
      * @param attackSpeed         the attack speed modifier
@@ -53,10 +53,10 @@ public enum DefaultToolCustomizer implements ToolCustomizer {
      * @throws NullPointerException if any parameter is {@code null}
      */
     @Override
-    public ToolItem create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+    public ToolItem create(ToolType type, ToolMaterial material, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
         return new ToolItem(
                 type,
-                toolMaterial,
+                material,
                 properties,
                 attackDamage,
                 attackSpeed,

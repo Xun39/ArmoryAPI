@@ -75,7 +75,7 @@ public interface ToolCustomizer {
      * </p>
      *
      * @param type the type of tool to create (sword, axe, etc.)
-     * @param toolMaterial material tier defining durability, mining level, and base damage
+     * @param material material tier defining durability, mining level, and base damage
      * @param properties item properties with applied durability and repair settings
      * @param attackDamage the total attack damage bonus (including material bonus)
      * @param attackSpeed the attack speed modifier
@@ -85,5 +85,5 @@ public interface ToolCustomizer {
      * @throws IllegalArgumentException if the tool material is incompatible with the
      *         tool type or properties are invalid
      */
-    ToolItem create(ToolType type, ToolMaterial toolMaterial, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes);
+    ToolItem create(ToolType type, ToolMaterial material, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes);
 }
