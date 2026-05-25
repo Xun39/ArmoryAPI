@@ -90,9 +90,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * the result for subsequent calls.
      * </p>
      *
-     * @return supplier providing the registered {@link SwordItem}, never {@code null}
+     * @return supplier providing the registered {@link ToolItem}, never {@code null}
      */
-    public Supplier<SwordItem> getSword() {
+    public Supplier<ToolItem> getSword() {
         return getTool(ToolType.SWORD);
     }
 
@@ -103,9 +103,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * the result for subsequent calls.
      * </p>
      *
-     * @return supplier providing the registered {@link AxeItem}, never {@code null}
+     * @return supplier providing the registered {@link ToolItem}, never {@code null}
      */
-    public Supplier<AxeItem> getAxe() {
+    public Supplier<ToolItem> getAxe() {
         return getTool(ToolType.AXE);
     }
 
@@ -116,9 +116,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * the result for subsequent calls.
      * </p>
      *
-     * @return supplier providing the registered {@link PickaxeItem}, never {@code null}
+     * @return supplier providing the registered {@link ToolItem}, never {@code null}
      */
-    public Supplier<PickaxeItem> getPickaxe() {
+    public Supplier<ToolItem> getPickaxe() {
         return getTool(ToolType.PICKAXE);
     }
 
@@ -129,9 +129,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * the result for subsequent calls.
      * </p>
      *
-     * @return supplier providing the registered {@link HoeItem}, never {@code null}
+     * @return supplier providing the registered {@link ToolItem}, never {@code null}
      */
-    public Supplier<HoeItem> getHoe() {
+    public Supplier<ToolItem> getHoe() {
         return getTool(ToolType.HOE);
     }
 
@@ -142,9 +142,9 @@ public class ToolSet extends ItemSet<ToolType, ToolItem> {
      * the result for subsequent calls.
      * </p>
      *
-     * @return supplier providing the registered {@link ShovelItem}, never {@code null}
+     * @return supplier providing the registered {@link ToolItem}, never {@code null}
      */
-    public Supplier<ShovelItem> getShovel() {
+    public Supplier<ToolItem> getShovel() {
         return getTool(ToolType.SHOVEL);
     }
 
