@@ -64,14 +64,14 @@ public interface ArmorCustomizer {
      *   <li>The material holder provides armor statistics and enchantability</li>
      * </ul>
      *
-     * @param type the type of armor piece to create (helmet, chestplate, leggings, or boots)
-     * @param material holder for the armor material defining protection values and toughness
+     * @param type             the type of armor piece to create (helmet, chestplate, leggings, or boots)
+     * @param material         holder for the armor material defining protection values and toughness
      * @param durabilityFactor multiplier applied to the base material durability
-     * @param props base item properties (durability should be set by the implementation)
+     * @param properties       base item properties (durability should be set by the implementation)
      * @return a fully configured armor item instance, never {@code null}
-     * @throws NullPointerException if {@code type}, {@code material}, or {@code props} is {@code null}
+     * @throws NullPointerException     if {@code type}, {@code material}, or {@code props} is {@code null}
      * @throws IllegalArgumentException if the durability factor is negative or invalid
      * @see ArmorItem.Type#getDurability(int)
      */
-    ArmorItem createArmorItem(ArmorType type, Holder<ArmorMaterial> material, int durabilityFactor, Item.Properties props);
+    ArmorItem create(ArmorType type, Holder<ArmorMaterial> material, Item.Properties properties, int durabilityFactor);
 }

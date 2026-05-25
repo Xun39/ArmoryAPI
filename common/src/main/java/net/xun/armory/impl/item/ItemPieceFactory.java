@@ -64,5 +64,5 @@ public interface ItemPieceFactory<P, T extends Item> {
      * @throws IllegalStateException if the item cannot be created due to
      *         invalid configuration or missing dependencies
      */
-    T create(P piece);
+    T create(P piece, Item.Properties properties);
 }

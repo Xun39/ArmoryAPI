@@ -2,6 +2,9 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+
+import java.util.function.Consumer;
 
 /**
  * Abstract base class for tool customizers that apply hit effects depending on the tool type.
@@ -21,28 +24,18 @@ import net.minecraft.world.item.*;
  */
 public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
 
-    /**
-     * Creates a tool of the specified type with the given tier and item properties.
-     * <p>
-     * The returned tool overrides {@link Item#hurtEnemy(ItemStack, LivingEntity, LivingEntity)}
-     * to call {@link #onHit(ToolType, boolean, LivingEntity, LivingEntity)} and apply the
-     * hit effect if the attack succeeds.
-     * </p>
-     *
-     * @param type       the type of tool to create (SWORD, AXE, PICKAXE, HOE, SHOVEL)
-     * @param tier       the material tier of the tool
-     * @param properties the item properties (durability, crafting group, etc.)
-     * @return a new tool item that applies a hit effect on successful attacks
-     * @throws IllegalArgumentException if the tool type is not supported
-     */
     @Override
-    public Item createTool(ToolType type, Tier tier, Item.Properties properties) {
-        return switch (type) {
-            case SWORD -> createSword(tier, properties);
-            case AXE -> createAxe(tier, properties);
-            case PICKAXE -> createPickaxe(tier, properties);
-            case HOE -> createHoe(tier, properties);
-            case SHOVEL -> createShovel(tier, properties);
+    public ToolItem create(ToolType type, Tier tier, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+        return new ToolItem(type, tier, properties, attackDamage, attackSpeed, additionalAttributes) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        type,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
         };
     }
 
@@ -81,110 +74,5 @@ public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
         }
 
         return flag;
-    }
-
-    /**
-     * Creates a sword item that applies hit effects.
-     *
-     * @param tier       the material tier
-     * @param properties the item properties
-     * @return a new {@link SwordItem} with hit effect support
-     */
-    protected Item createSword(Tier tier, Item.Properties properties) {
-        return new SwordItem(tier, properties) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        ToolType.SWORD,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
-    }
-
-    /**
-     * Creates an axe item that applies hit effects.
-     *
-     * @param tier       the material tier
-     * @param properties the item properties
-     * @return a new {@link AxeItem} with hit effect support
-     */
-    protected Item createAxe(Tier tier, Item.Properties properties) {
-        return new AxeItem(tier, properties) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        ToolType.AXE,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
-    }
-
-    /**
-     * Creates a pickaxe item that applies hit effects.
-     *
-     * @param tier       the material tier
-     * @param properties the item properties
-     * @return a new {@link AxeItem} with hit effect support
-     */
-    protected Item createPickaxe(Tier tier, Item.Properties properties) {
-        return new PickaxeItem(tier, properties) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        ToolType.PICKAXE,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
-    }
-
-    /**
-     * Creates a hoe item that applies hit effects.
-     *
-     * @param tier       the material tier
-     * @param properties the item properties
-     * @return a new {@link AxeItem} with hit effect support
-     */
-    protected Item createHoe(Tier tier, Item.Properties properties) {
-        return new HoeItem(tier, properties) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        ToolType.HOE,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
-    }
-
-    /**
-     * Creates a shovel item that applies hit effects.
-     *
-     * @param tier       the material tier
-     * @param properties the item properties
-     * @return a new {@link AxeItem} with hit effect support
-     */
-    protected Item createShovel(Tier tier, Item.Properties properties) {
-        return new ShovelItem(tier, properties) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        ToolType.SHOVEL,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
     }
 }

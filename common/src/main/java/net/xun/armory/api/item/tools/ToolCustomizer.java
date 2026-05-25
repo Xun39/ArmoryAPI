@@ -2,7 +2,10 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
+
+import java.util.function.Consumer;
 
 /**
  * Factory interface for creating custom tool items with specialized initialization.
@@ -61,5 +64,5 @@ public interface ToolCustomizer {
      * @throws IllegalArgumentException if the tier is incompatible with the
      *         tool type or properties are invalid
      */
-    Item createTool(ToolType type, Tier tier, Item.Properties properties);
+    ToolItem create(ToolType type, Tier tier, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes);
 }

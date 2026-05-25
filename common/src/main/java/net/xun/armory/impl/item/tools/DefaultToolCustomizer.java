@@ -1,9 +1,14 @@
 package net.xun.armory.impl.item.tools;
 
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.api.item.tools.ToolCustomizer;
+import net.xun.armory.api.item.tools.ToolItem;
 import net.xun.armory.api.item.tools.ToolType;
 import net.xun.armory.api.item.tools.ToolSet;
+import org.jetbrains.annotations.ApiStatus;
+
+import java.util.function.Consumer;
 
 /**
  * Provides the default tool customization implementation using standard
@@ -34,25 +39,35 @@ import net.xun.armory.api.item.tools.ToolSet;
  * @see ToolSet.Builder
  * @since 2.0.0
  */
-public final class DefaultToolCustomizer {
+@ApiStatus.Internal
+public enum DefaultToolCustomizer implements ToolCustomizer {
+    INSTANCE;
 
     /**
-     * Private constructor to prevent instantiation.
-     */
-    private DefaultToolCustomizer() {}
-
-    /**
-     * The singleton instance of the default tool customizer.
+     * Creates a {@link ToolItem} with the given configuration.
      * <p>
-     * This implementation creates standard Minecraft tool items using the
-     * appropriate tool class for each {@link ToolType}.
+     * This method simply forwards all parameters to the {@link ToolItem} constructor.
+     * No additional logic or modification is applied.
      * </p>
+     *
+     * @param type                 the tool type to create
+     * @param tier                 the material tier for the tool
+     * @param properties           the item properties (durability, repair items, etc.)
+     * @param attackDamage         the total attack damage bonus (including material bonus)
+     * @param attackSpeed          the attack speed modifier
+     * @param additionalAttributes consumer for extra attribute modifiers
+     * @return a new {@link ToolItem} instance
+     * @throws NullPointerException if any parameter is {@code null}
      */
-    public static ToolCustomizer INSTANCE = ((type, tier, properties) -> switch (type) {
-        case SWORD -> new SwordItem(tier, properties);
-        case AXE -> new AxeItem(tier, properties);
-        case PICKAXE -> new PickaxeItem(tier, properties);
-        case HOE -> new HoeItem(tier, properties);
-        case SHOVEL -> new ShovelItem(tier, properties);
-    });
+    @Override
+    public ToolItem create(ToolType type, Tier tier, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+        return new ToolItem(
+                type,
+                tier,
+                properties,
+                attackDamage,
+                attackSpeed,
+                additionalAttributes
+        );
+    }
 }
