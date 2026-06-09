@@ -3,4 +3,46 @@ plugins {
     id 'fabric-loom' version '1.8-SNAPSHOT' apply false
     // see https://projects.neoforged.net/neoforged/moddevgradle for new versions
     id 'net.neoforged.moddev' version '2.0.49-beta' apply false
+
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://cursemaven.com"
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    group = project.group
+    version = project.version
+
+    plugins.withId('java') {
+        java {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
+    publishing {
+        repositories {
+            mavenLocal()
+        }
+    }
+
+    signing {
+        def signingKey = findProperty("signingKey")?.toString()
+        def signingPassword = findProperty("signingPassword")?.toString()
+
+        if (signingKey != null && signingPassword != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications
+        }
+    }
 }

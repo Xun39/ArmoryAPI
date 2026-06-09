@@ -1,8 +1,10 @@
 package net.xun.armory.platform;
 
-import net.xun.armory.impl.ArmoryConstants;
+import net.xun.armory.ArmoryConstants;
+import net.xun.armory.platform.services.IToolCompatModule;
 import net.xun.armory.platform.services.IPlatformHelper;
 
+import java.util.List;
 import java.util.ServiceLoader;
 
 // Service loaders are a built-in Java feature that allow us to locate implementations of an interface that vary from one
@@ -14,17 +16,32 @@ public class Services {
     // For example this can be used to check if the code is running on Forge vs Fabric, or to ask the modloader if another
     // mod is loaded.
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
+    public static final List<IToolCompatModule> ACTIVE_COMPAT_MODULES = loadAll(IToolCompatModule.class);
 
     // This code is used to load a service for the current environment. Your implementation of the service must be defined
     // manually by including a text file in META-INF/services named with the fully qualified class name of the service.
     // Inside the file you should write the fully qualified class name of the implementation to load for the platform. For
     // example our file on Forge points to ForgePlatformHelper while Fabric points to FabricPlatformHelper.
     public static <T> T load(Class<T> clazz) {
-
         final T loadedService = ServiceLoader.load(clazz)
                 .findFirst()
                 .orElseThrow(() -> new NullPointerException("Failed to load service for " + clazz.getName()));
+
         ArmoryConstants.LOG.debug("Loaded {} for service {}", loadedService, clazz);
         return loadedService;
+    }
+
+    public static <T> java.util.List<T> loadAll(Class<T> clazz) {
+        List<T> services = ServiceLoader.load(clazz)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .toList();
+
+        ArmoryConstants.LOG.debug("Loaded {} implementations for service {}", services.size(), clazz.getName());
+        for (T service : services) {
+            ArmoryConstants.LOG.debug(" - {}", service.getClass().getName());
+        }
+
+        return services;
     }
 }

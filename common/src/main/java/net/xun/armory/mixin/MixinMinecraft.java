@@ -1,6 +1,6 @@
 package net.xun.armory.mixin;
 
-import net.xun.armory.impl.ArmoryConstants;
+import net.xun.armory.ArmoryConstants;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

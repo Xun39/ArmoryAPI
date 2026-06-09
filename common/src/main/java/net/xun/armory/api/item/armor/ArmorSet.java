@@ -1,14 +1,20 @@
 package net.xun.armory.api.item.armor;
 
 import net.minecraft.core.Holder;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
-import net.xun.armory.impl.item.armor.ArmorFactory;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.xun.armory.api.item.tools.ToolContext;
+import net.xun.armory.api.item.tools.ToolCustomizer;
+import net.xun.armory.api.item.tools.ToolPieceType;
+import net.xun.armory.api.item.tools.ToolStats;
 import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
 import net.xun.armory.api.item.ItemSet;
 
-import java.util.Objects;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -39,100 +45,93 @@ import java.util.function.UnaryOperator;
  * }</pre>
  *
  * @see Builder
- * @see ArmorType
  * @see ArmorCustomizer
  * @since 1.0.0
  */
-public class ArmorSet extends ItemSet<ArmorType, ArmorItem> {
+public class ArmorSet extends ItemSet<ArmorPieceType, Item> {
+
+    private final Holder<ArmorMaterial> material;
+    private final List<ArmorPieceType> pieces;
+    private final int durabilityFactor;
+    private final ArmorContext context;
 
     /**
      * Constructs a new ArmorSet with the specified configuration.
      *
-     * @param name base name for all armor pieces in the set (e.g., "diamond")
-     * @param material holder for the armor material defining protection and toughness
-     * @param durabilityFactor multiplier for the material's base durability
+     * @param name               base name for all armor pieces in the set (e.g., "diamond")
+     * @param material           holder for the armor material defining protection and toughness
      * @param propertiesModifier supplier for item properties applied to all pieces
-     * @param customizer strategy for creating individual armor items
-     * @throws NullPointerException if any required parameter is {@code null}
+     * @param customizer         strategy for creating individual armor items
+     * @throws NullPointerException     if any required parameter is {@code null}
      * @throws IllegalArgumentException if durabilityFactor is negative
      */
     protected ArmorSet(
             String name,
             Holder<ArmorMaterial> material,
+            List<ArmorPieceType> pieces,
             int durabilityFactor,
             UnaryOperator<Item.Properties> propertiesModifier,
+            Consumer<ItemAttributeModifiers.Builder> additionalAttributes,
             ArmorCustomizer customizer
     ) {
-        super(
-                name,
-                ArmorType.class,
-                new ArmorFactory(material, durabilityFactor, propertiesModifier, customizer)
-        );
+        super(name, pieces, makeFactory(name, material, durabilityFactor, propertiesModifier, additionalAttributes, customizer));
+
+        this.material = Objects.requireNonNull(material, "material");
+        this.pieces = List.copyOf(pieces);
+        this.durabilityFactor = durabilityFactor;
+        this.context = new ArmorContext(name, material, durabilityFactor, propertiesModifier, additionalAttributes, customizer);
     }
 
-    /**
-     * @deprecated Use {@link #ArmorSet(String, Holder, int, UnaryOperator, ArmorCustomizer)} instead
-     */
-    @Deprecated(since = "3.0.0")
-    protected ArmorSet(String name,
-                       Holder<ArmorMaterial> material,
-                       int durabilityFactor,
-                       Supplier<Item.Properties> propertiesSupplier,
-                       ArmorCustomizer customizer
+    private static BiFunction<ArmorPieceType, Item.Properties, Item> makeFactory(
+            String name,
+            Holder<ArmorMaterial> material,
+            int durabilityFactor,
+            UnaryOperator<Item.Properties> propertiesModifier,
+            Consumer<ItemAttributeModifiers.Builder> additionalAttributes,
+            ArmorCustomizer customizer
     ) {
-        this(name, material, durabilityFactor, properties -> propertiesSupplier.get(), customizer);
+        ArmorContext context = new ArmorContext(
+                name,
+                material,
+                durabilityFactor,
+                propertiesModifier,
+                additionalAttributes,
+                customizer
+        );
+
+        return (piece, properties) -> piece.createItem(context, properties);
     }
 
-    /**
-     * Gets the helmet item supplier from this armor set.
-     * <p>
-     * The supplier will create the helmet item upon first invocation and cache
-     * the result for subsequent calls.
-     * </p>
-     *
-     * @return supplier providing the registered helmet, never {@code null}
-     */
-    public Supplier<ArmorItem> getHelmet() {
-        return get(ArmorType.HELMET);
+    public Holder<ArmorMaterial> getMaterial() {
+        return material;
     }
 
-    /**
-     * Gets the chestplate item supplier from this armor set.
-     * <p>
-     * The supplier will create the chestplate item upon first invocation and cache
-     * the result for subsequent calls.
-     * </p>
-     *
-     * @return supplier providing the registered chestplate, never {@code null}
-     */
-    public Supplier<ArmorItem> getChestplate() {
-        return get(ArmorType.CHESTPLATE);
+    public int getDurabilityFactor() {
+        return durabilityFactor;
     }
 
-    /**
-     * Gets the leggings item supplier from this armor set.
-     * <p>
-     * The supplier will create the leggings item upon first invocation and cache
-     * the result for subsequent calls.
-     * </p>
-     *
-     * @return supplier providing the registered leggings, never {@code null}
-     */
-    public Supplier<ArmorItem> getLeggings() {
-        return get(ArmorType.LEGGINGS);
+    public ArmorContext getContext() {
+        return context;
     }
 
-    /**
-     * Gets the boots item supplier from this armor set.
-     * <p>
-     * The supplier will create the boots item upon first invocation and cache
-     * the result for subsequent calls.
-     * </p>
-     *
-     * @return supplier providing the registered boots, never {@code null}
-     */
-    public Supplier<ArmorItem> getBoots() {
-        return get(ArmorType.BOOTS);
+    public Supplier<Item> getHelmet() {
+        return super.get(VanillaArmorPieces.HELMET);
+    }
+    public Supplier<Item> getChestplate() {
+        return super.get(VanillaArmorPieces.CHESTPLATE);
+    }
+    public Supplier<Item> getLeggings() {
+        return super.get(VanillaArmorPieces.LEGGINGS);
+    }
+    public Supplier<Item> getBoots() {
+        return super.get(VanillaArmorPieces.BOOTS);
+    }
+    public Supplier<Item> getBody() {
+        return super.get(VanillaArmorPieces.BODY);
+    }
+
+    public static Builder builder(String name, Holder<ArmorMaterial> material) {
+        return new Builder(name, material);
     }
 
     /**
@@ -167,54 +166,42 @@ public class ArmorSet extends ItemSet<ArmorType, ArmorItem> {
     public static class Builder {
         private final String name;
         private final Holder<ArmorMaterial> material;
+        private final List<ArmorPieceType> pieces = new ArrayList<>();
         private int durabilityFactor;
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
+        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
         private ArmorCustomizer customizer = DefaultArmorCustomizer.INSTANCE;
 
         /**
          * Constructs a new builder for an armor set with the specified base name and material.
          *
-         * @param name base name for armor pieces (e.g., "iron"), will be appended with armor-specific suffixes
+         * @param name     base name for armor pieces (e.g., "iron"), will be appended with armor-specific suffixes
          * @param material armor material holder defining protection values and toughness
-         * @throws NullPointerException if {@code name} or {@code material} is {@code null}
+         * @throws NullPointerException     if {@code name} or {@code material} is {@code null}
          * @throws IllegalArgumentException if {@code name} is empty or contains invalid characters
          */
-        public Builder(String name, Holder<ArmorMaterial> material) {
+        private Builder(String name, Holder<ArmorMaterial> material) {
             this.name = Objects.requireNonNull(name, "name");
             this.material = Objects.requireNonNull(material, "material");
         }
 
-        /**
-         * Sets the durability multiplier for all armor pieces in the set.
-         * <p>
-         * The final durability for each piece is calculated as:
-         * <code>armor type base durability × durabilityFactor</code>
-         * </p>
-         * <strong>Vanilla Reference Values:</strong>
-         * <table border="1">
-         *   <caption>Vanilla Durability Factors</caption>
-         *   <tr><th>Material</th><th>Durability Factor</th></tr>
-         *   <tr><td>Leather</td><td>5</td></tr>
-         *   <tr><td>Chain</td><td>15</td></tr>
-         *   <tr><td>Iron</td><td>15</td></tr>
-         *   <tr><td>Gold</td><td>7</td></tr>
-         *   <tr><td>Diamond</td><td>33</td></tr>
-         *   <tr><td>Netherite</td><td>37</td></tr>
-         * </table>
-         *
-         * <table border="1">
-         *   <caption>Vanilla Armor Type Base Durability</caption>
-         *   <tr><th>Armor type</th><th>Base Durability</th></tr>
-         *   <tr><td>Helmet</td><td>11</td></tr>
-         *   <tr><td>Chestplate</td><td>16</td></tr>
-         *   <tr><td>Leggings</td><td>15</td></tr>
-         *   <tr><td>Boots</td><td>13</td></tr>
-         * </table>
-         *
-         * @param durabilityFactor multiplier for base armor type durability
-         * @return this builder for method chaining
-         * @throws IllegalArgumentException if {@code durabilityFactor} is negative
-         */
+        public Builder piece(ArmorPieceType piece) {
+            Objects.requireNonNull(piece, "piece");
+            if (pieces.contains(piece)) {
+                throw new IllegalArgumentException("Duplicate piece: " + piece.getNameSuffix());
+            }
+            pieces.add(piece);
+            return this;
+        }
+
+        public Builder pieces(Collection<ArmorPieceType> pieces) {
+            Objects.requireNonNull(pieces, "pieces");
+            for (ArmorPieceType piece : pieces) {
+                piece(piece);
+            }
+            return this;
+        }
+
         public Builder withDurabilityFactor(int durabilityFactor) {
             this.durabilityFactor = durabilityFactor;
             return this;
@@ -247,6 +234,23 @@ public class ArmorSet extends ItemSet<ArmorType, ArmorItem> {
         }
 
         /**
+         * Adds a consumer that can further modify the {@link ItemAttributeModifiers.Builder}
+         * after the default tool attributes have been applied.
+         * <p>
+         * This is useful for adding extra attribute modifiers (e.g., movement speed, knockback resistance)
+         * to all tools in the set.
+         * </p>
+         *
+         * @param additionalAttributes consumer that receives the attribute builder
+         * @return this builder for method chaining
+         * @throws NullPointerException if {@code additionalAttributes} is {@code null}
+         */
+        public Builder withAdditionalAttributes(Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+            this.additionalAttributes = Objects.requireNonNull(additionalAttributes, "additionalAttributes");
+            return this;
+        }
+
+        /**
          * Sets a custom armor creation strategy for specialized armor types.
          * <p>
          * This allows overriding the default armor creation behavior to implement
@@ -275,7 +279,10 @@ public class ArmorSet extends ItemSet<ArmorType, ArmorItem> {
          * @throws IllegalStateException if required configuration is invalid
          */
         public ArmorSet build() {
-            return new ArmorSet(this.name, this.material, this.durabilityFactor, this.propertiesModifier, this.customizer);
+            if (pieces.isEmpty()) {
+                throw new IllegalStateException("ArmorSet '" + name + "' has no pieces");
+            }
+            return new ArmorSet(name, material, pieces, durabilityFactor, propertiesModifier, additionalAttributes, customizer);
         }
     }
 }

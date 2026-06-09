@@ -1,6 +1,7 @@
 plugins {
     id 'multiloader-common'
     id 'net.neoforged.moddev'
+    id 'maven-publish'
 }
 
 neoForge {
@@ -37,5 +38,41 @@ configurations {
 artifacts {
     commonJava sourceSets.main.java.sourceDirectories.singleFile
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}
+
+publishing {
+    publications {
+        common(MavenPublication) {
+            artifactId = "${mod_id}-common"
+
+            from components.java
+
+            pom {
+                name = "${mod_name} Common"
+                description = project.description ?: "Common module for ${mod_name}"
+                url = "https://github.com/xun39/armoryapi"
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit/'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Xun'
+                        name = 'Xun'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/xun39/armoryapi.git'
+                    developerConnection = 'scm:git:ssh://github.com:xun39/armoryapi.git'
+                    url = 'https://github.com/xun39/armoryapi'
+                }
+            }
+        }
+    }
 }
 

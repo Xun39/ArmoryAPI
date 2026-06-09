@@ -30,6 +30,7 @@ import net.xun.armory.impl.item.PieceType;
  * @see ArmorItem.Type
  * @since 1.0.0
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public enum ArmorType implements PieceType {
 
     /** Head protection armor piece */

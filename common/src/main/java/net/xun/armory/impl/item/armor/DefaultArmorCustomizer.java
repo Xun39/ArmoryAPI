@@ -1,12 +1,11 @@
 package net.xun.armory.impl.item.armor;
 
-import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
+import net.xun.armory.api.item.armor.ArmorContext;
 import net.xun.armory.api.item.armor.ArmorCustomizer;
+import net.xun.armory.api.item.armor.ArmorPieceType;
 import net.xun.armory.api.item.armor.ArmorSet;
-import net.xun.armory.api.item.armor.ArmorType;
 
 /**
  * Provides the default armor customization implementation using standard {@link ArmorItem}
@@ -29,12 +28,14 @@ public enum DefaultArmorCustomizer implements ArmorCustomizer {
     INSTANCE;
 
     @Override
-    public ArmorItem create(ArmorType type, Holder<ArmorMaterial> material, Item.Properties properties, int durabilityFactor) {
-        int durability = type.getArmorType().getDurability(durabilityFactor);
+    public Item create(ArmorPieceType piece, ArmorContext context, Item.Properties properties) {
+        ArmorItem.Type vanillaType = piece.vanillaType();
+        Item.Properties finalProps = context.applyProperties(piece, properties.durability(vanillaType.getDurability(context.durabilityFactor())));
+
         return new ArmorItem(
-                material,
-                type.getArmorType(),
-                properties.durability(durability)
+                context.material(),
+                vanillaType,
+                finalProps
         );
     }
 }

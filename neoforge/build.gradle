@@ -42,3 +42,44 @@ neoForge {
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+
+    compileOnly("curse.maven:farmers-delight-398521:8083481")
+}
+
+publishing {
+    publications {
+        neoforge(MavenPublication) {
+            artifactId = "${mod_id}-neoforge"
+
+            from components.java
+
+            pom {
+                name = "${mod_name} NeoForge"
+                description = project.description ?: "NeoForge version of ${mod_name}"
+                url = "https://github.com/xun39/armoryapi"
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit/'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Xun'
+                        name = 'Xun'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/xun39/armoryapi.git'
+                    developerConnection = 'scm:git:ssh://github.com:xun39/armoryapi.git'
+                    url = 'https://github.com/xun39/armoryapi'
+                }
+            }
+        }
+    }
+}

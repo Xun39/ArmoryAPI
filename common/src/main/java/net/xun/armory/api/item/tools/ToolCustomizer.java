@@ -1,11 +1,8 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Tier;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.TieredItem;
 import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
-
-import java.util.function.Consumer;
 
 /**
  * Factory interface for creating custom tool items with specialized initialization.
@@ -20,49 +17,37 @@ import java.util.function.Consumer;
  * <h2>Usage Examples:</h2>
  *
  * <pre>{@code
- * ToolCustomizer CUSTOM_CLASS = (type, tier, props) -> {
+ * // Example 1: Custom tool classes per type
+ * ToolCustomizer CUSTOM_CLASS = (type, material, properties, attackDamage, attackSpeed, additionalAttributes) -> {
  *     switch (type) {
  *         case SWORD:
- *             return new CustomSwordItem(tier, props);
+ *             return new CustomSwordItem(material, properties, attackDamage, attackSpeed, additionalAttributes);
  *         case AXE:
- *             return new CustomAxeItem(tier, props);
+ *             return new CustomAxeItem(material, properties, attackDamage, attackSpeed, additionalAttributes);
  *         default:
- *             // (throw an exception)
+ *             // Fall back to standard tool for other types
+ *             return new ToolItem(type, material, properties, attackDamage, attackSpeed, additionalAttributes);
  *     }
+ * };
+ *
+ * // Example 2: Adding an extra attribute modifier to all tools
+ * ToolCustomizer EXTRA_KNOCKBACK = (type, material, properties, attackDamage, attackSpeed, additionalAttributes) -> {
+ *     // Combine the provided additionalAttributes with extra knockback
+ *     Consumer<ItemAttributeModifiers.Builder> combined = builder -> {
+ *         additionalAttributes.accept(builder);
+ *         builder.add(Attributes.ATTACK_KNOCKBACK,
+ *             new AttributeModifier(ResourceLocation.parse("mymod:extra_knockback"), 1.0, AttributeModifier.Operation.ADD_VALUE),
+ *             EquipmentSlotGroup.MAINHAND);
+ *     };
+ *     return new ToolItem(type, material, properties, attackDamage, attackSpeed, combined);
  * };
  * }</pre>
  *
- * @see ToolType
  * @see ToolSet.Builder#withCustomizer(ToolCustomizer)
  * @see DefaultToolCustomizer#INSTANCE
  * @since 1.0.0
  */
 public interface ToolCustomizer {
 
-    /**
-     * Creates a tool item instance of the specified type.
-     * <p>
-     * Implementations are responsible for constructing the tool item with the
-     * appropriate tier and properties. The returned item should be fully
-     * configured and ready for registration and in-game use.
-     * </p>
-     * <p></p>
-     * <strong>Implementation Notes:</strong>
-     * <ul>
-     *   <li>Properties already include any attribute modifications from
-     *       {@link AttributeHelper}</li>
-     *   <li>The tier provides durability, mining level, and base damage</li>
-     *   <li>Custom implementations may return subclasses of standard tools</li>
-     * </ul>
-     *
-     * @param type the type of tool to create (sword, axe, etc.)
-     * @param tier material tier defining durability, mining level, and base damage
-     * @param properties item properties with applied attributes
-     * @return a fully configured tool item instance, never {@code null}
-     * @throws NullPointerException if {@code type}, {@code tier}, or
-     *         {@code properties} is {@code null}
-     * @throws IllegalArgumentException if the tier is incompatible with the
-     *         tool type or properties are invalid
-     */
-    ToolItem create(ToolType type, Tier tier, Item.Properties properties, float attackDamage, float attackSpeed, Consumer<ItemAttributeModifiers.Builder> additionalAttributes);
+    TieredItem create(ToolPieceType piece, ToolContext context, Item.Properties properties);
 }

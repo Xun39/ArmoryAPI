@@ -1,4 +1,4 @@
-package net.xun.armory.impl;
+package net.xun.armory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

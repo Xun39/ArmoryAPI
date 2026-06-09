@@ -1,6 +1,7 @@
 plugins {
     id 'multiloader-loader'
     id 'fabric-loom'
+    id 'maven-publish'
 }
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -32,6 +33,46 @@ loom {
             setConfigName('Fabric Server')
             ideConfigGenerated(true)
             runDir('runs/server')
+        }
+    }
+}
+
+publishing {
+    publications {
+        fabric(MavenPublication) {
+            artifactId = "${mod_id}-fabric"
+
+            artifact(remapJar) {
+                builtBy remapJar
+            }
+
+            artifact(sourcesJar)
+
+            pom {
+                name = "${mod_name} Fabric"
+                description = project.description ?: "Fabric version of ${mod_name}"
+                url = "https://github.com/xun39/armoryapi"
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit/'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Xun'
+                        name = 'Xun'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/xun39/armoryapi.git'
+                    developerConnection = 'scm:git:ssh://github.com:xun39/armoryapi.git'
+                    url = 'https://github.com/xun39/armoryapi'
+                }
+            }
         }
     }
 }

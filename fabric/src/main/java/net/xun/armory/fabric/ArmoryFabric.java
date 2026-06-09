@@ -1,7 +1,7 @@
 package net.xun.armory.fabric;
 
 import net.fabricmc.api.ModInitializer;
-import net.xun.armory.impl.ArmoryCommon;
+import net.xun.armory.ArmoryCommon;
 
 public class ArmoryFabric implements ModInitializer {
     

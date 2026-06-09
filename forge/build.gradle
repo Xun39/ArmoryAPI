@@ -2,6 +2,7 @@ plugins {
     id 'multiloader-loader'
     id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
+    id 'maven-publish'
 }
 base {
     archivesName = "${mod_name}-forge-${minecraft_version}"
@@ -79,16 +80,44 @@ dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            fg.component(it)
-        }
-    }
-}
-
 sourceSets.each {
     def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
     it.output.resourcesDir = dir
     it.java.destinationDirectory = dir
+}
+
+publishing {
+    publications {
+        forge(MavenPublication) {
+            artifactId = "${mod_id}-forge"
+
+            from components.java
+
+            pom {
+                name = "${mod_name} Forge"
+                description = project.description ?: "Forge version of ${mod_name}"
+                url = "https://github.com/xun39/armoryapi"
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit/'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Xun'
+                        name = 'Xun'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/xun39/armoryapi.git'
+                    developerConnection = 'scm:git:ssh://github.com:xun39/armoryapi.git'
+                    url = 'https://github.com/xun39/armoryapi'
+                }
+            }
+        }
+    }
 }

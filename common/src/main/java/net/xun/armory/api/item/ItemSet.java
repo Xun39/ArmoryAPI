@@ -2,102 +2,45 @@ package net.xun.armory.api.item;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.xun.armory.impl.item.ItemPieceFactory;
 import net.xun.armory.impl.item.PieceType;
 import net.xun.armory.impl.util.LazyReference;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Base class for managing sets of related items with lazy initialization.
- * <p>
- * This class provides a foundation for creating and managing item sets (such as
- * armor sets or tool sets) where each piece is represented by an enum constant
- * and lazily initialized upon first access. It handles the creation, caching,
- * and registration of individual item pieces within a cohesive set.
- * </p>
- *
- * @param <P> the enum type representing individual pieces in the set
- * @param <T> the type of item managed by this set, must extend {@link Item}
- * @see ItemPieceFactory
- * @see PieceType
- * @see LazyReference
  * @since 2.0.0
  */
-public class ItemSet<P extends Enum<P>, T extends Item> {
+public class ItemSet<P extends PieceType, T extends Item> {
 
     /** The base name of this item set, used for generating registry IDs. */
     protected final String setName;
 
-    /**
-     * Map storing lazy references to each item piece, keyed by the piece enum.
-     * <p>
-     * This map is populated during construction and never modified afterward.
-     * The {@link LazyReference} instances are initially unbound; they must be
-     * bound via {@link #bind(String, Supplier)} before use.
-     * </p>
-     */
-    private final EnumMap<P, LazyReference<T>> pieces;
+    private final LinkedHashMap<P, LazyReference<T>> pieces = new LinkedHashMap<>();
+    private final Map<String, LazyReference<T>> piecesByRegistryName = new LinkedHashMap<>();
+    private final LinkedHashMap<P, Function<Item.Properties, T>> factories = new LinkedHashMap<>();
 
-    /**
-     * Map allowing lookup of a lazy reference by the generated registry name.
-     * <p>
-     * This provides access when binding items during registration, without
-     * needing to know the corresponding enum constant.
-     * </p>
-     */
-    private final Map<String, LazyReference<T>> piecesByRegistryName;
-
-    /**
-     * Map from piece enum to a factory function that creates the actual item
-     * when the lazy reference is first resolved.
-     * <p>
-     * The function takes an {@link Item.Properties} argument (which may be ignored
-     * or modified by the factory) and returns a new instance of {@code T}.
-     * </p>
-     */
-    private final EnumMap<P, Function<Item.Properties, T>> factories;
-
-    /**
-     * Constructs a new item set with the specified configuration.
-     * This constructor initializes the item set by:
-     * <ol>
-     *   <li>Creating an {@link EnumMap} for the piece enum class</li>
-     *   <li>Iterating through all enum constants of the piece type</li>
-     *   <li>Creating a {@link LazyReference} for each piece using the factory</li>
-     *   <li>Generating appropriate names for each piece</li>
-     * </ol>
-     *
-     * @param setName        the base name for all items in this set (e.g., "diamond"),
-     *                       used to generate registry IDs, never {@code null}
-     * @param pieceEnumClass the class object for the piece enum type,
-     *                       used to discover all possible pieces, never {@code null}
-     * @param factory        the factory responsible for creating individual item pieces,
-     *                       never {@code null}
-     * @throws NullPointerException     if any parameter is {@code null}
-     * @throws IllegalArgumentException if the piece enum class has no constants
-     */
-    protected ItemSet(String setName, Class<P> pieceEnumClass, ItemPieceFactory<P, T> factory) {
+    protected ItemSet(String setName, Collection<P> pieceTypes, BiFunction<P, Item.Properties, T> factory) {
         this.setName = Objects.requireNonNull(setName, "setName");
 
-        Objects.requireNonNull(pieceEnumClass, "pieceEnumClass");
+        Objects.requireNonNull(pieceTypes, "pieceTypes");
         Objects.requireNonNull(factory, "factory");
 
-        this.pieces = new EnumMap<>(pieceEnumClass);
-        this.piecesByRegistryName = new LinkedHashMap<>();
-        this.factories = new EnumMap<>(pieceEnumClass);
+        if (pieceTypes.isEmpty()) {
+            throw new IllegalArgumentException("pieceTypes cannot be empty");
+        }
 
-        for (P piece : pieceEnumClass.getEnumConstants()) {
-            PieceType pieceType = Objects.requireNonNull(factory.getPieceType(piece), "pieceType");
+        for (P piece : pieceTypes) {
+            Objects.requireNonNull(piece, "piece");
 
-            String registryName = setName + pieceType.getNameSuffix();
+            String registryName = setName + piece.getNameSuffix();
             LazyReference<T> reference = new LazyReference<>(registryName);
 
             pieces.put(piece, reference);
             piecesByRegistryName.put(registryName, reference);
-            factories.put(piece, properties -> factory.create(piece, properties));
+            factories.put(piece, properties -> factory.apply(piece, properties));
         }
     }
 
@@ -211,6 +154,10 @@ public class ItemSet<P extends Enum<P>, T extends Item> {
      */
     public Collection<T> getAll() {
         return pieces.values().stream().map(Supplier::get).toList();
+    }
+
+    public Set<P> getPieces() {
+        return Collections.unmodifiableSet(pieces.keySet());
     }
 
     /**
