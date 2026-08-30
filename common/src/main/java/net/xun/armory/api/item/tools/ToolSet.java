@@ -2,7 +2,6 @@ package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 import net.xun.armory.api.item.ItemSet;
 
 import java.util.*;
@@ -14,10 +13,9 @@ import java.util.function.UnaryOperator;
 /**
  * @since 1.0.0
  */
-public class ToolSet extends ItemSet<ToolPieceType, TieredItem> {
+public class ToolSet extends ItemSet<ToolPieceType, Item> {
 
     private final Tier tier;
-    private final List<ToolPieceType> pieces;
     private final Map<ToolPieceType, ToolStats> statsByPiece;
     private final ToolContext context;
 
@@ -33,12 +31,11 @@ public class ToolSet extends ItemSet<ToolPieceType, TieredItem> {
         super(name, pieces, makeFactory(name, tier, statsByPiece, propertiesModifier, additionalAttributes, customizer));
 
         this.tier = Objects.requireNonNull(tier, "tier");
-        this.pieces = List.copyOf(pieces);
         this.statsByPiece = Collections.unmodifiableMap(new LinkedHashMap<>(statsByPiece));
-        this.context = new ToolContext(name, tier, statsByPiece, propertiesModifier, additionalAttributes, customizer);
+        this.context = new ToolContext(name, tier, statsByPiece, propertiesModifier, additionalAttributes);
     }
 
-    private static BiFunction<ToolPieceType, Item.Properties, TieredItem> makeFactory(
+    private static BiFunction<ToolPieceType, Item.Properties, Item> makeFactory(
             String name,
             Tier tier,
             Map<ToolPieceType, ToolStats> statsByPiece,
@@ -51,11 +48,13 @@ public class ToolSet extends ItemSet<ToolPieceType, TieredItem> {
                 tier,
                 Collections.unmodifiableMap(new LinkedHashMap<>(statsByPiece)),
                 propertiesModifier,
-                additionalAttributes,
-                customizer
+                additionalAttributes
         );
 
-        return (piece, properties) -> piece.createItem(context, properties);
+        return (piece, properties) -> {
+            Item.Properties finalProperties = context.applyProperties(piece, properties);
+            return customizer.create(piece, context, finalProperties);
+        };
     }
 
     public Tier getTier() {
@@ -104,7 +103,7 @@ public class ToolSet extends ItemSet<ToolPieceType, TieredItem> {
         private final Map<ToolPieceType, ToolStats> statsByPiece = new LinkedHashMap<>();
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
-        private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
+        private ToolCustomizer customizer = ToolCustomizer.DEFAULT;
         private AttributeHelper attributeHelper = null;
 
         /**
@@ -235,7 +234,7 @@ public class ToolSet extends ItemSet<ToolPieceType, TieredItem> {
          *
          * @param customizer tool creation strategy implementation
          * @return this builder for method chaining
-         * @throws NullPointerException if {@code customizer} is {@code null}
+         * @throws NullPointerException if {@code itemFactory} is {@code null}
          * @see ToolCustomizer
          */
         public Builder withCustomizer(ToolCustomizer customizer) {

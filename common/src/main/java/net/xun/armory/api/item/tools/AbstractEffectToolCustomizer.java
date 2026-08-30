@@ -12,21 +12,16 @@ import java.util.function.Consumer;
 public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
 
     @Override
-    public TieredItem create(ToolPieceType piece, ToolContext context, Item.Properties properties) {
-        ToolStats stats = context.statsFor(piece);
-        Item.Properties finalProps = context.applyProperties(piece, properties);
+    public Item create(ToolPieceType piece, ToolContext context, Item.Properties properties) {
+        if (!VanillaToolPieces.STANDARD.contains(piece)) return ToolCustomizer.super.create(piece, context, properties);
 
-        return new ToolItem(piece, context.tier(), stats, finalProps, context.combinedAttributes(piece)) {
-            @Override
-            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-                return onHit(
-                        piece,
-                        super.hurtEnemy(stack, target, attacker),
-                        target,
-                        attacker
-                );
-            }
-        };
+        if (piece == VanillaToolPieces.SWORD) return createSword(context.tier(), properties);
+        else if (piece == VanillaToolPieces.AXE) return createAxe(context.tier(), properties);
+        else if (piece == VanillaToolPieces.PICKAXE) return createPickaxe(context.tier(), properties);
+        else if (piece == VanillaToolPieces.SHOVEL) return createShovel(context.tier(), properties);
+        else if (piece == VanillaToolPieces.HOE) return createHoe(context.tier(), properties);
+
+        return ToolCustomizer.super.create(piece, context, properties);
     }
 
     /**
@@ -37,9 +32,9 @@ public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
      * such as applying potion effects, dealing additional damage, or playing sounds.
      * </p>
      *
-     * @param piece  the type of tool that caused the hit
-     * @param target    the entity that was hit
-     * @param attacker  the entity that performed the attack
+     * @param piece    the type of tool that caused the hit
+     * @param target   the entity that was hit
+     * @param attacker the entity that performed the attack
      */
     protected abstract void handleHitEffect(ToolPieceType piece, LivingEntity target, LivingEntity attacker);
 
@@ -52,10 +47,10 @@ public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
      * {@code hurtEnemy} methods of the created tools.
      * </p>
      *
-     * @param piece  the type of tool used
-     * @param flag      the result of the original {@code hurtEnemy} call (true if the target was damaged)
-     * @param target    the entity that was hit
-     * @param attacker  the entity that performed the attack
+     * @param piece    the type of tool used
+     * @param flag     the result of the original {@code hurtEnemy} call (true if the target was damaged)
+     * @param target   the entity that was hit
+     * @param attacker the entity that performed the attack
      * @return the same {@code flag} value, allowing chaining in {@code hurtEnemy}
      */
     protected boolean onHit(ToolPieceType piece, boolean flag, LivingEntity target, LivingEntity attacker) {
@@ -64,5 +59,110 @@ public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
         }
 
         return flag;
+    }
+
+    /**
+     * Creates a sword item that applies hit effects.
+     *
+     * @param tier       the material tier
+     * @param properties the item properties
+     * @return a new {@link SwordItem} with hit effect support
+     */
+    protected Item createSword(Tier tier, Item.Properties properties) {
+        return new SwordItem(tier, properties) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        VanillaToolPieces.SWORD,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
+        };
+    }
+
+    /**
+     * Creates an axe item that applies hit effects.
+     *
+     * @param tier       the material tier
+     * @param properties the item properties
+     * @return a new {@link AxeItem} with hit effect support
+     */
+    protected Item createAxe(Tier tier, Item.Properties properties) {
+        return new AxeItem(tier, properties) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        VanillaToolPieces.AXE,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
+        };
+    }
+
+    /**
+     * Creates a pickaxe item that applies hit effects.
+     *
+     * @param tier       the material tier
+     * @param properties the item properties
+     * @return a new {@link AxeItem} with hit effect support
+     */
+    protected Item createPickaxe(Tier tier, Item.Properties properties) {
+        return new PickaxeItem(tier, properties) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        VanillaToolPieces.PICKAXE,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
+        };
+    }
+
+    /**
+     * Creates a shovel item that applies hit effects.
+     *
+     * @param tier       the material tier
+     * @param properties the item properties
+     * @return a new {@link AxeItem} with hit effect support
+     */
+    protected Item createShovel(Tier tier, Item.Properties properties) {
+        return new ShovelItem(tier, properties) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        VanillaToolPieces.SHOVEL,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
+        };
+    }
+
+    /**
+     * Creates a hoe item that applies hit effects.
+     *
+     * @param tier       the material tier
+     * @param properties the item properties
+     * @return a new {@link AxeItem} with hit effect support
+     */
+    protected Item createHoe(Tier tier, Item.Properties properties) {
+        return new HoeItem(tier, properties) {
+            @Override
+            public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+                return onHit(
+                        VanillaToolPieces.HOE,
+                        super.hurtEnemy(stack, target, attacker),
+                        target,
+                        attacker
+                );
+            }
+        };
     }
 }

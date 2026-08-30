@@ -1,8 +1,6 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.TieredItem;
-import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 
 /**
  * Factory interface for creating custom tool items with specialized initialization.
@@ -10,7 +8,7 @@ import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
  * Implementations of this interface provide fine-grained control over tool item
  * creation, enabling custom tool classes, modified attribute application, or
  * additional properties beyond standard tool behavior. The
- * {@link DefaultToolCustomizer#INSTANCE} serves as the default implementation
+ * serves as the default implementation
  * producing standard Minecraft tool items.
  * </p>
  *
@@ -44,10 +42,18 @@ import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
  * }</pre>
  *
  * @see ToolSet.Builder#withCustomizer(ToolCustomizer)
- * @see DefaultToolCustomizer#INSTANCE
  * @since 1.0.0
  */
 public interface ToolCustomizer {
 
-    TieredItem create(ToolPieceType piece, ToolContext context, Item.Properties properties);
+    /**
+     * The default customizer that simply uses the piece's own factory.
+     * This instance does not override {@link #create}, so it inherits
+     * the default method defined below.
+     */
+    ToolCustomizer DEFAULT = new ToolCustomizer() {};
+
+    default Item create(ToolPieceType piece, ToolContext context, Item.Properties properties) {
+        return piece.itemFactory().create(piece, context, properties);
+    }
 }

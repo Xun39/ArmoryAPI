@@ -1,22 +1,15 @@
 package net.xun.armory.neoforge.compat.farmersdelight;
 
-import net.xun.armory.api.item.tools.behavior.ToolBehaviors;
+import net.xun.armory.api.item.tools.ToolItemFactories;
 import net.xun.armory.api.item.tools.ToolPieceType;
-import net.xun.armory.platform.services.IToolCompatModule;
+import net.xun.armory.api.item.tools.ToolStats;
+import net.xun.armory.platform.IToolCompatModule;
 import vectorwing.farmersdelight.common.item.KnifeItem;
-import vectorwing.farmersdelight.common.tag.ModTags;
 
 import java.util.stream.Stream;
 
 public class FarmersDelightCompat implements IToolCompatModule {
-    private static final String MOD_ID = "farmersdelight";
-
     private static ToolPieceType KNIFE;
-
-    @Override
-    public String targetModId() {
-        return MOD_ID;
-    }
 
     public static ToolPieceType knife() {
         if (KNIFE == null)
@@ -27,15 +20,13 @@ public class FarmersDelightCompat implements IToolCompatModule {
 
     private static ToolPieceType createKnife() {
         return ToolPieceType.builder("_knife")
-                .behavior(ToolBehaviors.mining(ModTags.Blocks.MINEABLE_WITH_KNIFE))
-                .customizer((piece, context, properties) ->
-                        new KnifeItem(context.tier(), context.applyProperties(piece, properties))
-                )
+                .attackStats(ToolStats.DEFAULT_KNIFE)
+                .factory(ToolItemFactories.simple(KnifeItem::new))
                 .build();
     }
 
     @Override
     public Stream<ToolPieceType> toolPieces() {
-        return Stream.of(KNIFE);
+        return Stream.of(knife());
     }
 }

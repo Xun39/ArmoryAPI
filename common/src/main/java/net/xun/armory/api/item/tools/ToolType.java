@@ -1,7 +1,6 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.*;
-import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 import net.xun.armory.impl.item.PieceType;
 
 /**
@@ -53,7 +52,7 @@ public enum ToolType implements PieceType {
     /**
      * Gets the vanilla Minecraft tool class for this tool type.
      * <p>
-     * This class is used by {@link DefaultToolCustomizer} to create standard
+     * This class is used by to create standard
      * tool instances and can be used for type checking or reflection.
      * </p>
      *

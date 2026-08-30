@@ -35,7 +35,7 @@ public class ItemSet<P extends PieceType, T extends Item> {
         for (P piece : pieceTypes) {
             Objects.requireNonNull(piece, "piece");
 
-            String registryName = setName + piece.getNameSuffix();
+            String registryName = piece.registryName(setName);
             LazyReference<T> reference = new LazyReference<>(registryName);
 
             pieces.put(piece, reference);
@@ -89,7 +89,7 @@ public class ItemSet<P extends PieceType, T extends Item> {
      * <p>
      * This method is intended to be called during the item registration phase,
      * after the actual item instance has been created. The supplier is usually a
-     * memoizing supplier (e.g., {@link LazyReference} itself or a similar cache)
+     * memorizing supplier (e.g., {@link LazyReference} itself or a similar cache)
      * that will be invoked when {@link #get(P)} is called.
      * </p>
      * <p>

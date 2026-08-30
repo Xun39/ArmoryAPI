@@ -260,7 +260,7 @@ public class ArmorSet extends ItemSet<ArmorPieceType, Item> {
          *
          * @param customizer armor creation strategy implementation
          * @return this builder for method chaining
-         * @throws NullPointerException if {@code customizer} is {@code null}
+         * @throws NullPointerException if {@code itemFactory} is {@code null}
          * @see ArmorCustomizer
          */
         public Builder withCustomizer(ArmorCustomizer customizer) {

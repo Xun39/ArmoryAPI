@@ -1,27 +1,54 @@
 package net.xun.armory.platform;
 
 import net.xun.armory.ArmoryConstants;
-import net.xun.armory.platform.services.IToolCompatModule;
 import net.xun.armory.platform.services.IPlatformHelper;
+import net.xun.armory.platform.services.IToolCompatProvider;
 
-import java.util.List;
-import java.util.ServiceLoader;
+import java.util.*;
 
-// Service loaders are a built-in Java feature that allow us to locate implementations of an interface that vary from one
-// environment to another. In the context of MultiLoader we use this feature to access a mock API in the common code that
-// is swapped out for the platform specific implementation at runtime.
 public class Services {
 
-    // In this example we provide a platform helper which provides information about what platform the mod is running on.
-    // For example this can be used to check if the code is running on Forge vs Fabric, or to ask the modloader if another
-    // mod is loaded.
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
-    public static final List<IToolCompatModule> ACTIVE_COMPAT_MODULES = loadAll(IToolCompatModule.class);
+    public static final List<IToolCompatModule> ACTIVE_COMPAT_MODULES = loadActiveCompatModules();
 
-    // This code is used to load a service for the current environment. Your implementation of the service must be defined
-    // manually by including a text file in META-INF/services named with the fully qualified class name of the service.
-    // Inside the file you should write the fully qualified class name of the implementation to load for the platform. For
-    // example our file on Forge points to ForgePlatformHelper while Fabric points to FabricPlatformHelper.
+    public static List<IToolCompatModule> loadActiveCompatModules() {
+        List<IToolCompatModule> services = new ArrayList<>();
+
+        ServiceLoader.load(IToolCompatProvider.class)
+                .stream()
+                .forEach(provider -> {
+                    IToolCompatProvider compatProvider = provider.get();
+                    String modId = compatProvider.targetModId();
+
+                    ArmoryConstants.LOG.debug("Found compat module provider {} targeting mod {}", compatProvider.getClass().getName(), modId);
+
+                    if (!PLATFORM.isModLoaded(modId)) {
+                        ArmoryConstants.LOG.debug("Skipping compat module {} because mod {} is not loaded", compatProvider.getClass().getName(), modId);
+                        return;
+                    }
+
+                    IToolCompatModule module = compatProvider.create();
+                    services.add(module);
+
+                    ArmoryConstants.LOG.debug(
+                            "Loaded compat module {} for mod {}",
+                            module.getClass().getName(),
+                            modId
+                    );
+                });
+
+        ArmoryConstants.LOG.debug(
+                "Loaded {} active compat module implementations for service {}",
+                services.size(),
+                IToolCompatModule.class.getName()
+        );
+        for (IToolCompatModule service : services) {
+            ArmoryConstants.LOG.debug(" - {}", service.getClass().getName());
+        }
+
+        return services;
+    }
+
     public static <T> T load(Class<T> clazz) {
         final T loadedService = ServiceLoader.load(clazz)
                 .findFirst()
@@ -29,19 +56,5 @@ public class Services {
 
         ArmoryConstants.LOG.debug("Loaded {} for service {}", loadedService, clazz);
         return loadedService;
-    }
-
-    public static <T> java.util.List<T> loadAll(Class<T> clazz) {
-        List<T> services = ServiceLoader.load(clazz)
-                .stream()
-                .map(ServiceLoader.Provider::get)
-                .toList();
-
-        ArmoryConstants.LOG.debug("Loaded {} implementations for service {}", services.size(), clazz.getName());
-        for (T service : services) {
-            ArmoryConstants.LOG.debug(" - {}", service.getClass().getName());
-        }
-
-        return services;
     }
 }

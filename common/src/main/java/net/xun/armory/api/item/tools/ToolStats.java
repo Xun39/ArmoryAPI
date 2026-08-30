@@ -1,5 +1,12 @@
 package net.xun.armory.api.item.tools;
 
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+
 public record ToolStats(float attackDamage, float attackSpeed) {
     public static final ToolStats ZERO = new ToolStats(0.0F, 0.0F);
 
@@ -11,7 +18,25 @@ public record ToolStats(float attackDamage, float attackSpeed) {
     public static final ToolStats DEFAULT_HOE = new ToolStats(-2.0F, 3.0F);
 
     // Modded
-
     // Knife from Farmer's Delight
     public static final ToolStats DEFAULT_KNIFE = new ToolStats(0.5F, 2.0F);
+
+    public void addBaseAttributes(Tier tier, ItemAttributeModifiers.Builder builder) {
+        builder.add(
+                Attributes.ATTACK_DAMAGE,
+                new AttributeModifier(
+                        Item.BASE_ATTACK_DAMAGE_ID,
+                        attackDamage() + tier.getAttackDamageBonus(),
+                        AttributeModifier.Operation.ADD_VALUE
+                ), EquipmentSlotGroup.MAINHAND
+        );
+        builder.add(
+                Attributes.ATTACK_SPEED,
+                new AttributeModifier(
+                        Item.BASE_ATTACK_SPEED_ID,
+                        attackSpeed() - 4,
+                        AttributeModifier.Operation.ADD_VALUE),
+                EquipmentSlotGroup.MAINHAND
+        );
+    }
 }

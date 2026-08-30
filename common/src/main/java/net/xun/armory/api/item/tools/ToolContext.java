@@ -1,8 +1,5 @@
 package net.xun.armory.api.item.tools;
 
-import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -17,8 +14,7 @@ public record ToolContext(
         Tier tier,
         Map<ToolPieceType, ToolStats> statsByPiece,
         UnaryOperator<Item.Properties> propertiesModifier,
-        Consumer<ItemAttributeModifiers.Builder> additionalAttributes,
-        ToolCustomizer customizer
+        Consumer<ItemAttributeModifiers.Builder> additionalAttributes
 ) {
     public ToolContext {
         Objects.requireNonNull(setName, "setName");
@@ -26,53 +22,33 @@ public record ToolContext(
         Objects.requireNonNull(statsByPiece, "statsByPiece");
         Objects.requireNonNull(propertiesModifier, "propertiesModifier");
         Objects.requireNonNull(additionalAttributes, "additionalAttributes");
-        Objects.requireNonNull(customizer, "defaultCustomizer");
     }
 
     public ToolStats statsFor(ToolPieceType piece) {
         ToolStats stats = statsByPiece.get(piece);
         if (stats == null) {
-            throw new IllegalArgumentException("No stats found for piece: " + piece.getNameSuffix());
+            throw new IllegalArgumentException("Missing ToolStats for piece: " + piece.getNameSuffix());
         }
         return stats;
     }
 
+    /**
+     * Applies all property modifiers (set-level and piece-level) and builds the
+     * final attribute modifiers. Returns a new {@link Item.Properties} instance.
+     */
     public Item.Properties applyProperties(ToolPieceType piece, Item.Properties base) {
+        Objects.requireNonNull(piece, "piece");
+        Objects.requireNonNull(base, "base");
+
         Item.Properties props = propertiesModifier.apply(base);
+        props = piece.propertiesModifier().apply(props);
 
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
-        createToolAttributes(tier, statsFor(piece), builder);
+        statsFor(piece).addBaseAttributes(tier, builder);
 
-        if (additionalAttributes != null)
-            combinedAttributes(piece);
+        additionalAttributes.accept(builder);
+        piece.additionalAttributes().accept(builder);
 
-        return piece.propertiesModifier().apply(props)
-                .attributes(builder.build());
-    }
-
-    public Consumer<ItemAttributeModifiers.Builder> combinedAttributes(ToolPieceType piece) {
-        return builder -> {
-            additionalAttributes.accept(builder);
-            piece.additionalAttributes().accept(builder);
-        };
-    }
-
-    private static void createToolAttributes(Tier tier, ToolStats stats, ItemAttributeModifiers.Builder builder) {
-        builder.add(
-                Attributes.ATTACK_DAMAGE,
-                new AttributeModifier(
-                        Item.BASE_ATTACK_DAMAGE_ID,
-                        stats.attackDamage() + tier.getAttackDamageBonus(),
-                        AttributeModifier.Operation.ADD_VALUE
-                ), EquipmentSlotGroup.MAINHAND
-        );
-        builder.add(
-                Attributes.ATTACK_SPEED,
-                new AttributeModifier(
-                        Item.BASE_ATTACK_SPEED_ID,
-                        stats.attackSpeed() - 4,
-                        AttributeModifier.Operation.ADD_VALUE),
-                EquipmentSlotGroup.MAINHAND
-        );
+        return props.attributes(builder.build());
     }
 }

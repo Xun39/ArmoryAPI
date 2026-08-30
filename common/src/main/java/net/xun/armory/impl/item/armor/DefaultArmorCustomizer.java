@@ -17,7 +17,7 @@ import net.xun.armory.api.item.armor.ArmorSet;
  * </p>
  * <p>
  * <strong>Note:</strong> This class cannot be instantiated. Use {@link #INSTANCE} to
- * access the default customizer implementation.
+ * access the default itemFactory implementation.
  * </p>
  *
  * @see ArmorCustomizer

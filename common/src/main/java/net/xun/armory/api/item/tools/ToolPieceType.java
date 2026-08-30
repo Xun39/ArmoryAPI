@@ -1,10 +1,8 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.xun.armory.impl.item.PieceType;
-import net.xun.armory.impl.item.tools.DefaultToolCustomizer;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -13,7 +11,7 @@ import java.util.function.UnaryOperator;
 public record ToolPieceType(
         String nameSuffix,
         ToolStats defaultStats,
-        ToolCustomizer customizer,
+        ToolItemFactory itemFactory,
         UnaryOperator<Item.Properties> propertiesModifier,
         Consumer<ItemAttributeModifiers.Builder> additionalAttributes
 ) implements PieceType {
@@ -21,7 +19,7 @@ public record ToolPieceType(
     public ToolPieceType {
         nameSuffix = Objects.requireNonNull(nameSuffix, "nameSuffix");
         Objects.requireNonNull(defaultStats, "defaultStats");
-        customizer = customizer == null ? DefaultToolCustomizer.INSTANCE : customizer;
+        Objects.requireNonNull(itemFactory, "itemFactory");
         propertiesModifier = propertiesModifier == null ? UnaryOperator.identity() : propertiesModifier;
         additionalAttributes = additionalAttributes == null ? builder -> {} : additionalAttributes;
 
@@ -38,9 +36,13 @@ public record ToolPieceType(
         return nameSuffix;
     }
 
-    public TieredItem createItem(ToolContext context, Item.Properties properties) {
-        ToolCustomizer effective = customizer != null ? customizer : context.customizer();
-        return effective.create(this, context, properties);
+    /**
+     * Creates an item using this piece's factory and the provided context/properties.
+     * This method does NOT apply any properties modifiers; it expects the properties
+     * to already be final.
+     */
+    public Item createItem(ToolContext context, Item.Properties properties) {
+        return itemFactory.create(this, context, properties);
     }
 
     public static Builder builder(String suffix) {
@@ -50,9 +52,10 @@ public record ToolPieceType(
     public static final class Builder {
         private final String suffix;
         private ToolStats defaultStats = ToolStats.ZERO;
-        private ToolCustomizer customizer = DefaultToolCustomizer.INSTANCE;
+        private ToolItemFactory factory;
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
         private Consumer<net.minecraft.world.item.component.ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
+        private Class<? extends Item> itemClass;
 
         private Builder(String suffix) {
             this.suffix = suffix;
@@ -63,8 +66,8 @@ public record ToolPieceType(
             return this;
         }
 
-        public Builder customizer(ToolCustomizer customizer) {
-            this.customizer = customizer;
+        public Builder factory(ToolItemFactory factory) {
+            this.factory = factory;
             return this;
         }
 
@@ -82,7 +85,7 @@ public record ToolPieceType(
             return new ToolPieceType(
                     suffix,
                     defaultStats,
-                    customizer,
+                    factory,
                     propertiesModifier,
                     additionalAttributes
             );
