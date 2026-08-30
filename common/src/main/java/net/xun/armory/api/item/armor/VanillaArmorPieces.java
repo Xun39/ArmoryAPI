@@ -4,9 +4,24 @@ import net.minecraft.world.item.ArmorItem;
 
 import java.util.List;
 
+/**
+ * Provides predefined {@link ArmorPieceType} constants for vanilla Minecraft armor pieces.
+ * <p>
+ * These constants match the standard armor types (helmet, chestplate, leggings, boots, body)
+ * and use vanilla {@link ArmorItem} with default durability calculations.
+ * </p>
+ * <p>
+ * The {@link #STANDARD} list contains all five pieces (including body) in order;
+ * the {@link #PLAYER} list contains the four pieces worn by players (excluding body).
+ * </p>
+ * <p>
+ * This class is not intended to be instantiated.
+ * </p>
+ *
+ * @since 3.0.0
+ */
 public final class VanillaArmorPieces {
     private VanillaArmorPieces() {
-
     }
 
     public static final ArmorPieceType HELMET = ArmorPieceType.builder("_helmet")
@@ -29,6 +44,9 @@ public final class VanillaArmorPieces {
             .vanillaType(ArmorItem.Type.BODY)
             .build();
 
+    /** List containing all five pieces: HELMET, CHESTPLATE, LEGGINGS, BOOTS, BODY. */
     public static final List<ArmorPieceType> STANDARD = List.of(HELMET, CHESTPLATE, LEGGINGS, BOOTS, BODY);
+
+    /** List containing the four player-worn pieces: HELMET, CHESTPLATE, LEGGINGS, BOOTS. */
     public static final List<ArmorPieceType> PLAYER = List.of(HELMET, CHESTPLATE, LEGGINGS, BOOTS);
 }

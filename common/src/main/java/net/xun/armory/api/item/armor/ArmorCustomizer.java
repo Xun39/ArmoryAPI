@@ -1,57 +1,33 @@
 package net.xun.armory.api.item.armor;
 
-import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
-import net.xun.armory.impl.item.armor.DefaultArmorCustomizer;
 
 /**
  * Factory interface for creating custom armor items with specialized initialization logic.
  * <p>
  * Implementations of this interface provide fine-grained control over armor item creation,
  * allowing for custom armor classes, modified durability calculations, or additional
- * properties beyond the standard {@link ArmorItem} behavior. The {@link DefaultArmorCustomizer#INSTANCE}
- * serves as the default implementation producing standard armor items with vanilla durability calculation.
+ * properties beyond the standard {@link ArmorItem} behavior. The {@link #DEFAULT}
+ * implementation delegates to the piece's own factory via
+ * {@link ArmorPieceType#createItem(ArmorContext, Item.Properties)}.
  * </p>
  *
- * <h2>Usage Examples:</h2>
- *
- * <pre>{@code
- * // Example 1: Fire-resistant armor with standard durability
- * ArmorCustomizer FIRE_RESISTANT = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
- *     return new ArmorItem(material, type.getArmorType(),
- *         props.durability(durability).fireResistant());
- * };
- *
- * // Example 2: Custom armor class with special behavior
- * ArmorCustomizer CUSTOM_CLASS = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
- *     return new CustomArmorItem(material, type.getArmorType(),
- *         props.durability(durability), type.getEquipmentSlot());
- * };
- *
- * // Example 3: Variable durability based on armor piece
- * ArmorCustomizer UNBALANCED = (type, material, factor, props) -> {
- *     int durability = type.getArmorType().getDurability(factor);
- *     // Helmets and boots receive additional durability
- *     if (type == ArmorType.HELMET || type == ArmorType.BOOTS) {
- *         durability += 100;
- *     }
- *     return new ArmorItem(material, type.getArmorType(),
- *         props.durability(durability));
- * };
- * }</pre>
- *
  * @see ArmorSet.Builder#withCustomizer(ArmorCustomizer)
- * @see DefaultArmorCustomizer#INSTANCE
  * @since 1.0.0
  */
 public interface ArmorCustomizer {
 
     /**
-     * Creates a fully configured armor item instance of the specified type.
+     * The default customizer that simply uses the piece's own factory.
+     * <p>
+     * This instance does not override {@link #create}, so it inherits
+     * the default method defined below, which calls {@link ArmorPieceType#createItem}.
+     */
+    ArmorCustomizer DEFAULT = new ArmorCustomizer() {};
+
+    /**
+     * Creates a fully configured armor item instance for the given piece.
      * <p>
      * Implementations are responsible for constructing the armor item with appropriate
      * durability calculation and property configuration. The returned item should be
@@ -59,17 +35,18 @@ public interface ArmorCustomizer {
      * </p>
      * <strong>Implementation Notes:</strong>
      * <ul>
-     *   <li>Durability calculation should typically use {@code type.getArmorType().getDurability(factor)}</li>
-     *   <li>Properties may be modified but should not be shared between item instances</li>
-     *   <li>The material holder provides armor statistics and enchantability</li>
+     *   <li>Durability can be obtained from {@code context.material().value().getDurability(context.durabilityFactor())}.</li>
+     *   <li>Properties may be modified but should not be shared between item instances.</li>
+     *   <li>The provided {@code properties} have already been processed by global and per‑piece modifiers.</li>
      * </ul>
      *
-     * @param piece      the type of armor piece to create (helmet, chestplate, leggings, or boots)
-     * @param properties base item properties (durability should be set by the implementation)
+     * @param piece      the armor piece type (never {@code null})
+     * @param context    the armor context providing material and modifiers (never {@code null})
+     * @param properties the final item properties (already modified) (never {@code null})
      * @return a fully configured armor item instance, never {@code null}
-     * @throws NullPointerException     if {@code type}, {@code material}, or {@code props} is {@code null}
-     * @throws IllegalArgumentException if the durability factor is negative or invalid
-     * @see ArmorItem.Type#getDurability(int)
+     * @throws NullPointerException if any argument is {@code null}
      */
-    Item create(ArmorPieceType piece, ArmorContext context, Item.Properties properties);
+    default Item create(ArmorPieceType piece, ArmorContext context, Item.Properties properties) {
+        return piece.createItem(context, properties);
+    }
 }

@@ -1,37 +1,31 @@
 package net.xun.armory.fabric.event;
 
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
-import net.minecraft.world.InteractionResult;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.xun.armory.api.item.tools.AbstractEffectToolCustomizer;
-import net.xun.armory.api.item.tools.ToolInstance;
-import net.xun.armory.api.item.tools.ToolInstanceRegistry;
+import net.xun.armory.api.item.tools.ToolMetaData;
+import net.xun.armory.api.item.tools.ToolMetaDataLookup;
+import net.xun.armory.impl.item.tools.ToolHitEffectDispatcher;
 
 public final class ArmoryCombatEvents {
     private ArmoryCombatEvents() {
     }
 
     public static void register() {
-        AttackEntityCallback.EVENT.register(
-                (player, level, hand, target, hitResult) -> {
-                    if (!(target instanceof LivingEntity livingTarget))
-                        return InteractionResult.PASS;
+        ServerLivingEntityEvents.AFTER_DAMAGE.register(
+                (entity, source, baseDamageTaken, damageTaken, blocked) -> {
+                    if (!(source.getEntity() instanceof LivingEntity attacker))
+                        return;
 
-                    ItemStack stack = player.getItemInHand(hand);
-                    ToolInstance instance = ToolInstanceRegistry.get(stack);
+                    ItemStack stack = attacker.getMainHandItem();
+                    ToolMetaData meta = ToolMetaDataLookup.get(stack);
+                    if (meta == null) {
+                        stack = attacker.getOffhandItem();
+                        meta = ToolMetaDataLookup.get(stack);
+                    }
+                    if (meta == null) return;
 
-                    if (instance == null) return InteractionResult.PASS;
-                    if (!(instance.customizer() instanceof AbstractEffectToolCustomizer customizer))
-                        return InteractionResult.PASS;
-
-                    customizer.handleHit(
-                            instance.piece(),
-                            livingTarget,
-                            player
-                    );
-
-                    return InteractionResult.PASS;
+                    ToolHitEffectDispatcher.maybeTriggerHitEffect(entity, attacker, stack);
                 }
         );
     }

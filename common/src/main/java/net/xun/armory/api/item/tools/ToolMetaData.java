@@ -8,7 +8,7 @@ package net.xun.armory.api.item.tools;
  * @param customizer the customizer responsible for creating/customizing the item
  * @since 3.0.0
  */
-public record ToolInstance(
+public record ToolMetaData(
         ToolPieceType piece,
         ToolContext context,
         ToolCustomizer customizer

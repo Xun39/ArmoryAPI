@@ -20,8 +20,8 @@ public class FarmersDelightCompat implements IToolCompatModule {
 
     private static ToolPieceType createKnife() {
         return ToolPieceType.builder("_knife")
-                .attackStats(ToolStats.DEFAULT_KNIFE)
-                .factory(ToolItemFactories.simple(KnifeItem::new))
+                .defaultStats(ToolStats.DEFAULT_KNIFE)
+                .factory(ToolItemFactories.fromConstructor(KnifeItem::new))
                 .build();
     }
 

@@ -1,15 +1,11 @@
 package net.xun.armory.api.item.tools;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.*;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-
-import java.util.function.Consumer;
 
 /**
  * @since 2.1.0
  */
-public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
+public abstract class AbstractHitEffectCustomizer implements ToolCustomizer {
 
     /**
      * Handles the hit effect for a specific tool type on the target entity.
@@ -23,14 +19,14 @@ public abstract class AbstractEffectToolCustomizer implements ToolCustomizer {
      * @param target   the entity that was hit
      * @param attacker the entity that performed the attack
      */
-    protected abstract void handleHitEffect(ToolPieceType piece, LivingEntity target, LivingEntity attacker);
+    protected abstract void onHit(ToolPieceType piece, LivingEntity target, LivingEntity attacker);
 
     /**
      * Invoked internally by the platform combat integration.
      */
-    public final void handleHit(ToolPieceType piece, LivingEntity target, LivingEntity attacker) {
+    public final void triggerHit(ToolPieceType piece, LivingEntity target, LivingEntity attacker) {
         if (!target.level().isClientSide) {
-            handleHitEffect(piece, target, attacker);
+            onHit(piece, target, attacker);
         }
     }
 }

@@ -6,9 +6,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.xun.armory.ArmoryConstants;
-import net.xun.armory.api.item.tools.AbstractEffectToolCustomizer;
-import net.xun.armory.api.item.tools.ToolInstance;
-import net.xun.armory.api.item.tools.ToolInstanceRegistry;
+import net.xun.armory.api.item.tools.ToolMetaData;
+import net.xun.armory.api.item.tools.ToolMetaDataLookup;
+import net.xun.armory.impl.item.tools.ToolHitEffectDispatcher;
 
 @EventBusSubscriber(modid = ArmoryConstants.MOD_ID)
 public final class ArmoryCombatEvents {
@@ -22,16 +22,13 @@ public final class ArmoryCombatEvents {
             return;
 
         ItemStack stack = attacker.getMainHandItem();
-        ToolInstance instance = ToolInstanceRegistry.get(stack);
+        ToolMetaData meta = ToolMetaDataLookup.get(stack);
+        if (meta == null) {
+            stack = attacker.getOffhandItem();
+            meta = ToolMetaDataLookup.get(stack);
+        }
+        if (meta == null) return;
 
-        if (instance == null) return;
-        if (!(instance.customizer() instanceof AbstractEffectToolCustomizer customizer))
-            return;
-
-        customizer.handleHit(
-                instance.piece(),
-                event.getEntity(),
-                attacker
-        );
+        ToolHitEffectDispatcher.maybeTriggerHitEffect(event.getEntity(), attacker, stack);
     }
 }

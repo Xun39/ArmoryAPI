@@ -11,6 +11,29 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 /**
+ * A specialized {@link ItemSet} representing a collection of tools that share
+ * a common {@link Tier}.
+ * <p>
+ * A {@code ToolSet} associates each {@link ToolPieceType} with tool-specific
+ * {@link ToolStats}, while the {@link Tier} provides the shared material
+ * properties used by the tools in the set.
+ * </p>
+ * <p>
+ * Tool creation is delegated to a {@link ToolCustomizer}, allowing individual
+ * sets to create specialized tool implementations without requiring
+ * subclasses of {@code ToolSet}. Item properties and additional attribute
+ * modifiers can also be configured globally through the builder.
+ * </p>
+ * <p>
+ * Tools are exposed as lazy suppliers inherited from {@link ItemSet}. This
+ * allows the set to be constructed independently of the final registered item
+ * instances.
+ * </p>
+ *
+ * @see ToolPieceType
+ * @see ToolStats
+ * @see ToolCustomizer
+ * @see ToolContext
  * @since 1.0.0
  */
 public class ToolSet extends ItemSet<ToolPieceType, Item> {
@@ -19,6 +42,27 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
     private final Map<ToolPieceType, ToolStats> statsByPiece;
     private final ToolContext context;
 
+    /**
+     * Constructs a tool set with the specified configuration.
+     * <p>
+     * The supplied tool statistics are associated with their corresponding piece
+     * types and are used by the tool creation factory. The supplied properties
+     * modifier and additional attribute consumer are shared by all tools created
+     * by this set.
+     * </p>
+     *
+     * @param name                 the base name used to generate tool registry names
+     * @param tier                 the shared material tier for the tools
+     * @param pieces               the tool pieces included in the set
+     * @param statsByPiece         the tool statistics associated with each piece
+     * @param propertiesModifier   modifier applied to item properties during creation
+     * @param additionalAttributes consumer used to add additional attribute modifiers
+     * @param customizer           strategy responsible for creating the tool instances
+     * @throws NullPointerException if {@code name}, {@code tier}, {@code pieces},
+     *                              {@code statsByPiece}, {@code propertiesModifier},
+     *                              {@code additionalAttributes}, or {@code customizer}
+     *                              is {@code null}
+     */
     protected ToolSet(
             String name,
             Tier tier,
@@ -55,16 +99,28 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
             Item.Properties finalProperties = context.applyProperties(piece, properties);
             Item item = customizer.create(piece, context, finalProperties);
 
-            ToolInstanceRegistry.register(item, new ToolInstance(piece, context, customizer));
+            ToolMetaDataLookup.register(item, new ToolMetaData(piece, context, customizer));
 
             return item;
         };
     }
 
+    /**
+     * Returns the {@link Tier} that defines the material properties for all tools in this set.
+     *
+     * @return the tier, never {@code null}
+     */
     public Tier getTier() {
         return tier;
     }
 
+    /**
+     * Retrieves the tool stats (attack damage and speed) for a specific piece.
+     *
+     * @param piece the tool piece type (must belong to this set)
+     * @return the stats for that piece
+     * @throws IllegalArgumentException if {@code piece} is not part of this set
+     */
     public ToolStats getStats(ToolPieceType piece) {
         ToolStats stats = statsByPiece.get(piece);
         if (stats == null) {
@@ -73,6 +129,11 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
         return stats;
     }
 
+    /**
+     * Returns the immutable context object that holds all configuration for this tool set.
+     *
+     * @return the tool context, never {@code null}
+     */
     public ToolContext getContext() {
         return context;
     }
@@ -80,15 +141,19 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
     public Supplier<Item> getSword() {
         return super.get(VanillaToolPieces.SWORD);
     }
+
     public Supplier<Item> getAxe() {
         return super.get(VanillaToolPieces.AXE);
     }
+
     public Supplier<Item> getPickaxe() {
         return super.get(VanillaToolPieces.PICKAXE);
     }
+
     public Supplier<Item> getShovel() {
         return super.get(VanillaToolPieces.SHOVEL);
     }
+
     public Supplier<Item> getHoe() {
         return super.get(VanillaToolPieces.HOE);
     }
@@ -106,9 +171,9 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
         private final List<ToolPieceType> pieces = new ArrayList<>();
         private final Map<ToolPieceType, ToolStats> statsByPiece = new LinkedHashMap<>();
         private UnaryOperator<Item.Properties> propertiesModifier = UnaryOperator.identity();
-        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {};
+        private Consumer<ItemAttributeModifiers.Builder> additionalAttributes = builder -> {
+        };
         private ToolCustomizer customizer = ToolCustomizer.DEFAULT;
-        private AttributeHelper attributeHelper = null;
 
         /**
          * Constructs a new builder for a tool set with the specified base name and tier.
@@ -127,7 +192,15 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
             this.tier = Objects.requireNonNull(tier, "tier");
         }
 
-        public Builder piece(ToolPieceType piece) {
+        /**
+         * Adds a single tool piece type to the set using its default stats.
+         *
+         * @param piece the piece to add (must not be {@code null})
+         * @return this builder
+         * @throws NullPointerException     if {@code piece} is {@code null}
+         * @throws IllegalArgumentException if the piece was already added
+         */
+        public Builder addPiece(ToolPieceType piece) {
             Objects.requireNonNull(piece, "piece");
             if (statsByPiece.containsKey(piece)) {
                 throw new IllegalArgumentException("Duplicate piece: " + piece.getNameSuffix());
@@ -137,53 +210,36 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
             return this;
         }
 
-        public Builder pieces(Collection<ToolPieceType> pieces) {
+        /**
+         * Adds multiple tool piece types to the set.
+         *
+         * @param pieces the collection of pieces to add (must not be {@code null})
+         * @return this builder
+         * @throws NullPointerException     if the collection is {@code null}
+         * @throws IllegalArgumentException if any piece is a duplicate
+         */
+        public Builder addPieces(Collection<ToolPieceType> pieces) {
             Objects.requireNonNull(pieces, "pieces");
             for (ToolPieceType piece : pieces) {
-                piece(piece);
+                addPiece(piece);
             }
             return this;
         }
 
         /**
-         * @deprecated
+         * Overrides the default stats for a previously added piece.
+         *
+         * @param piece the piece whose stats to override
+         * @param stats the new stats (attack damage and speed)
+         * @return this builder
+         * @throws IllegalArgumentException if the piece has not been added
          */
-        @Deprecated(forRemoval = true, since = "3.0.0")
-        private void initializeDefaultStats() {
-        }
-
-        // too difficult to hardcode stats into an array
-        @Deprecated(since = "3.0.0")
-        public Builder withToolStats(float[] damages, float[] speeds) {
-            validateArrayStats(damages, speeds);
-            for (int i = 0; i < pieces.size(); i++) {
-                statsByPiece.put(pieces.get(i), new ToolStats(damages[i], speeds[i]));
-            }
-            return this;
-        }
-
-        public Builder withToolStats(ToolPieceType piece, ToolStats stats) {
+        public Builder overrideStats(ToolPieceType piece, ToolStats stats) {
             if (!statsByPiece.containsKey(piece)) {
                 throw new IllegalArgumentException("Unknown piece: " + piece.getNameSuffix());
             }
             statsByPiece.put(piece, new ToolStats(stats.attackDamage(), stats.attackSpeed()));
             return this;
-        }
-
-        /**
-         * @deprecated now handled by ToolPieceType.defaultStats
-         */
-        @Deprecated(since = "3.0.0")
-        public Builder withVanillaBalance() {
-            if (pieces.size() != 5) {
-                throw new IllegalStateException(
-                        "withVanillaBalance() expects exactly 5 pieces in vanilla order"
-                );
-            }
-            return withToolStats(
-                    new float[] { 3.0F, 6.0F, 1.0F, 1.5F, -2.0F },
-                    new float[] { 1.6F, 0.9F, 1.2F, 1.0F, 3.0F }
-            );
         }
 
         /**
@@ -198,17 +254,8 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
          * @return this builder for method chaining
          * @throws NullPointerException if {@code propertiesModifier} is {@code null}
          */
-        public Builder withItemProperties(UnaryOperator<Item.Properties> propertiesModifier) {
+        public Builder globalPropertiesModifier(UnaryOperator<Item.Properties> propertiesModifier) {
             this.propertiesModifier = Objects.requireNonNull(propertiesModifier, "propertiesModifier");
-            return this;
-        }
-
-        /**
-         * @deprecated Use {{@link #withItemProperties(UnaryOperator)}} instead
-         */
-        @Deprecated(forRemoval = true, since = "3.0.0")
-        public Builder withItemPropertiesSupplier(Supplier<Item.Properties> propertiesSupplier) {
-            this.propertiesModifier = properties -> propertiesSupplier.get();
             return this;
         }
 
@@ -224,7 +271,7 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
          * @return this builder for method chaining
          * @throws NullPointerException if {@code additionalAttributes} is {@code null}
          */
-        public Builder withAdditionalAttributes(Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
+        public Builder globalAdditionalAttributes(Consumer<ItemAttributeModifiers.Builder> additionalAttributes) {
             this.additionalAttributes = Objects.requireNonNull(additionalAttributes, "additionalAttributes");
             return this;
         }
@@ -247,15 +294,6 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
         }
 
         /**
-         * @deprecated Use {@link #withAdditionalAttributes(Consumer)}
-         */
-        @Deprecated(forRemoval = true, since = "3.0.0")
-        public Builder withAttributeHelper(AttributeHelper attributeHelper) {
-            this.attributeHelper = attributeHelper;
-            return this;
-        }
-
-        /**
          * Constructs an immutable {@link ToolSet} with the current builder configuration.
          * <p>
          * Validates all configuration parameters and creates a new {@code ToolSet}
@@ -270,16 +308,6 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
                 throw new IllegalStateException("ToolSet '" + name + "' has no pieces");
             }
             return new ToolSet(name, tier, pieces, statsByPiece, propertiesModifier, additionalAttributes, customizer);
-        }
-
-        private void validateArrayStats(float[] damages, float[] speeds) {
-            int expected = pieces.size();
-            if (damages.length != expected || speeds.length != expected) {
-                throw new IllegalArgumentException(
-                        "Invalid stats array lengths. Expected " + expected + " elements, got damages="
-                                + damages.length + ", speeds=" + speeds.length
-                );
-            }
         }
     }
 }

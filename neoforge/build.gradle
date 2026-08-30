@@ -44,7 +44,6 @@ neoForge {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-
     compileOnly("curse.maven:farmers-delight-398521:8083481")
 }
 
