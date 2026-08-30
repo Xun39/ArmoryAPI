@@ -53,7 +53,11 @@ public class ToolSet extends ItemSet<ToolPieceType, Item> {
 
         return (piece, properties) -> {
             Item.Properties finalProperties = context.applyProperties(piece, properties);
-            return customizer.create(piece, context, finalProperties);
+            Item item = customizer.create(piece, context, finalProperties);
+
+            ToolInstanceRegistry.register(item, new ToolInstance(piece, context, customizer));
+
+            return item;
         };
     }
 

@@ -6,7 +6,6 @@ import net.minecraft.world.item.TieredItem;
 
 public final class ToolItemFactories {
     private ToolItemFactories() {
-
     }
 
     public static ToolItemFactory simple(VanillaItemFactory vanillaFactory) {
